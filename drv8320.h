@@ -34,29 +34,20 @@
 #ifndef DRV8320_H
 #define DRV8320_H
 
-//! \file   solutions/boostxl_drv8320rs/f28004x/drivers/include/drv8320.h
-//! \brief  Contains public interface to various functions related
-//!         to the DRV8320 object
-//!
+//  Contains public interface to various functions related to the DRV8320 object
 
 // **************************************************************************
 // the includes
 #include <math.h>
-
 // drivers
 #include "spi.h"
 #include "gpio.h"
 
 // **************************************************************************
 // modules
-
 // **************************************************************************
 // solutions
-
-//!
 //! \defgroup drv8320
-
-//!
 //! \ingroup drv8320
 //@{
 
@@ -66,240 +57,148 @@ extern "C" {
 
 // **************************************************************************
 // the defines
-
-//! \brief Defines the address mask
-//!
+// Defines the address mask
 #define DRV8320_ADDR_MASK                   (0x7800)
-
-//! \brief Defines the data mask
-//!
+// Defines the data mask
 #define DRV8320_DATA_MASK                   (0x07FF)
-
-//! \brief Defines the R/W mask
-//!
+// Defines the R/W mask
 #define DRV8320_RW_MASK                     (0x8000)
-
 //
 // STATUS00
 //
-//! \brief Defines the R/W mask
-//!
+// Defines the R/W mask
 #define DRV8320_FAULT_TYPE_MASK             (0x07FF)
-
 #define DRV8320_STATUS00_VDS_LC_BITS        (1 << 0)
 #define DRV8320_STATUS00_VDS_HC_BITS        (1 << 1)
 #define DRV8320_STATUS00_VDS_LB_BITS        (1 << 2)
 #define DRV8320_STATUS00_VDS_HB_BITS        (1 << 3)
 #define DRV8320_STATUS00_VDS_LA_BITS        (1 << 4)
 #define DRV8320_STATUS00_VDS_HA_BITS        (1 << 5)
-
-//! \brief Defines the location of the OTSD (Over temperature shutdown) bits
+// Defines the location of the OTSD (Over temperature shutdown) bits
 //! in the Status 1 register
 #define DRV8320_STATUS00_OTSD_BITS          (1 << 6)
 #define DRV8320_STATUS00_UVLO_BITS          (1 << 7)
 #define DRV8320_STATUS00_GDF_BITS           (1 << 8)
 #define DRV8320_STATUS00_VDS_OCP_BITS       (1 << 9)
 #define DRV8320_STATUS00_FAULT_BITS         (1 << 10)
-
 //
 // STATUS01
 //
-//! \brief Defines the location of the VGS_LC bits in the Status 2 register
-//!
+// Defines the location of the VGS_LC bits in the Status 2 register
 #define DRV8320_STATUS01_VGS_LC_BITS        (1 << 0)
-
-//! \brief Defines the location of the VGS_HC bits in the Status 2 register
-//!
+// Defines the location of the VGS_HC bits in the Status 2 register
 #define DRV8320_STATUS01_VGS_HC_BITS        (1 << 1)
-
-//! \brief Defines the location of the VGS_LB bits in the Status 2 register
-//!
+// Defines the location of the VGS_LB bits in the Status 2 register
 #define DRV8320_STATUS01_VGS_LB_BITS        (1 << 2)
-
-//! \brief Defines the location of the VGS_HB bits in the Status 2 register
-//!
+// Defines the location of the VGS_HB bits in the Status 2 register
 #define DRV8320_STATUS01_VGS_HB_BITS        (1 << 3)
-
-//! \brief Defines the location of the VGS_LA bits in the Status 2 register
-//!
+// Defines the location of the VGS_LA bits in the Status 2 register
 #define DRV8320_STATUS01_VGS_LA_BITS        (1 << 4)
-
-//! \brief Defines the location of the VGS_HA bits in the Status 2 register
-//!
+// Defines the location of the VGS_HA bits in the Status 2 register
 #define DRV8320_STATUS01_VGS_HA_BITS        (1 << 5)
-
-//! \brief Defines the location of the CPUV (charge pump undervoltage) bits in
+// Defines the location of the CPUV (charge pump undervoltage) bits in
 //! the Status 2 register
 #define DRV8320_STATUS01_CPUV_BITS          (1 << 6)
-
-//! \brief Defines the location of the OTW bits in the Status 2 register
-//!
+// Defines the location of the OTW bits in the Status 2 register
 #define DRV8320_STATUS01_OTW_BITS           (1 << 7)
-
-//! \brief Defines the location of the SC_OC bits in the Status 2 register
-//!
+// Defines the location of the SC_OC bits in the Status 2 register
 #define DRV8320_STATUS01_SC_OC_BITS         (1 << 8)
-
-//! \brief Defines the location of the SB_OC bits in the Status 2 register
-//!
+// Defines the location of the SB_OC bits in the Status 2 register
 #define DRV8320_STATUS01_SB_OC_BITS         (1 << 9)
-
-//! \brief Defines the location of the SA_OC bits in the Status 2 register
-//!
+// Defines the location of the SA_OC bits in the Status 2 register
 #define DRV8320_STATUS01_SA_OC_BITS         (1 << 10)
-
 //
 // CTRL02
 //
-//! \brief Defines the location of the CLR_FLT bits in the Control 2 register
-//!
+// Defines the location of the CLR_FLT bits in the Control 2 register
 #define DRV8320_CTRL02_CLR_FLT_BITS         (1 << 0)
-
-//! \brief Defines the location of the BRAKE bits in the Control 2 register
-//!
+// Defines the location of the BRAKE bits in the Control 2 register
 #define DRV8320_CTRL02_BRAKE_BITS           (1 << 1)
-
-//! \brief Defines the location of the COAST bits in the Control 2 register
-//!
+// Defines the location of the COAST bits in the Control 2 register
 #define DRV8320_CTRL02_COAST_BITS           (1 << 2)
-
-//! \brief Defines the location of the 1PWM_DIR bits in the Control 2 register
-//!
+// Defines the location of the 1PWM_DIR bits in the Control 2 register
 #define DRV8320_CTRL02_PWM1_DIR_BITS        (1 << 3)
-
-//! \brief Defines the location of the 1PWM_COM bits in the Control 2 register
-//!
+// Defines the location of the 1PWM_COM bits in the Control 2 register
 #define DRV8320_CTRL02_PWM1_COM_BITS        (1 << 4)
-
-//! \brief Defines the location of the PWM_MODE bits in the Control 2 register
-//!
+// Defines the location of the PWM_MODE bits in the Control 2 register
 #define DRV8320_CTRL02_PWM_MODE_BITS        (3 << 5)
-
-//! \brief Defines the location of the OTW_REP bits in the Control 2 register
-//!
+// Defines the location of the OTW_REP bits in the Control 2 register
 #define DRV8320_CTRL02_OTW_REP_BITS         (1 << 7)
-
-//! \brief Defines the location of the DIS_GDF bits in the Control 2 register
-//!
+// Defines the location of the DIS_GDF bits in the Control 2 register
 #define DRV8320_CTRL02_DIS_GDF_BITS         (1 << 8)
-
-//! \brief Defines the location of the DIS_CPUV bits in the Control 2 register
-//!
+// Defines the location of the DIS_CPUV bits in the Control 2 register
 #define DRV8320_CTRL02_DIS_CPUV_BITS        (1 << 9)
-
-//! \brief Defines the location of the RESERVED1 bits in the Control 2 register
-//!
+// Defines the location of the RESERVED1 bits in the Control 2 register
 #define DRV8320_CTRL02_RESERVED1_BITS       (1 << 10)
-
 //
 // CTRL03
 //
-//! \brief Defines the location of the IDRIVEN_HS bits in the Control 3
+// Defines the location of the IDRIVEN_HS bits in the Control 3
 //! register
 #define DRV8320_CTRL03_IDRIVEN_HS_BITS      (15 << 0)
-
-//! \brief Defines the location of the IDRIVEP_HS bits in the Control 3
+// Defines the location of the IDRIVEP_HS bits in the Control 3
 //! register
 #define DRV8320_CTRL03_IDRIVEP_HS_BITS      (15 << 4)
-
-//! \brief Defines the location of the LOCK bits in the Control 3 register
-//!
+// Defines the location of the LOCK bits in the Control 3 register
 #define DRV8320_CTRL03_LOCK_BITS            (7 << 8)
-
 //
 // CTRL04
 //
-//! \brief Defines the location of the IDRIVEN_LS bits in the Control 4
+// Defines the location of the IDRIVEN_LS bits in the Control 4
 //! register
 #define DRV8320_CTRL04_IDRIVEN_LS_BITS      (15 << 0)
-
-//! \brief Defines the location of the IDRIVEP_LS bits in the Control 4
+// Defines the location of the IDRIVEP_LS bits in the Control 4
 //! register
 #define DRV8320_CTRL04_IDRIVEP_LS_BITS      (15 << 4)
-
-//! \brief Defines the location of the TDRIVE bits in the Control 4 register
-//!
+// Defines the location of the TDRIVE bits in the Control 4 register
 #define DRV8320_CTRL04_TDRIVE_BITS          (3 << 8)
-
-//! \brief Defines the location of the CBC bits in the Control 4 register
-//!
+// Defines the location of the CBC bits in the Control 4 register
 #define DRV8320_CTRL04_CBC_BITS             (1 << 10)
-
 //
 // CTRL05
 //
-//! \brief Defines the location of the VDS_LVL bits in the Control 5 register
-//!
+// Defines the location of the VDS_LVL bits in the Control 5 register
 #define DRV8320_CTRL05_VDS_LVL_BITS         (15 << 0)
-
-//! \brief Defines the location of the OCP_DEG bits in the Control 5 register
-//!
+// Defines the location of the OCP_DEG bits in the Control 5 register
 #define DRV8320_CTRL05_OCP_DEG_BITS         (3 << 4)
-
-//! \brief Defines the location of the OCP_MODE bits in the Control 5 register
-//!
+// Defines the location of the OCP_MODE bits in the Control 5 register
 #define DRV8320_CTRL05_OCP_MODE_BITS        (3 << 6)
-
-//! \brief Defines the location of the DEAD_TIME bits in the Control 5 register
-//!
+// Defines the location of the DEAD_TIME bits in the Control 5 register
 #define DRV8320_CTRL05_DEAD_TIME_BITS       (3 << 8)
-
-//! \brief Defines the location of the TRETRY bits in the Control 5 register
-//!
+// Defines the location of the TRETRY bits in the Control 5 register
 #define DRV8320_CTRL05_TRETRY_BITS          (1 << 10)
-
 //
 // CTRL06
 //
-//! \brief Defines the location of the SEN_LVL bits in the Control 6 register
-//!
+// Defines the location of the SEN_LVL bits in the Control 6 register
 #define DRV8320_CTRL06_SEN_LVL_BITS         (3 << 0)
-
-//! \brief Defines the location of the CSA_CAL_C bits in the Control 6 register
-//!
+// Defines the location of the CSA_CAL_C bits in the Control 6 register
 #define DRV8320_CTRL06_CSA_CAL_C_BITS       (1 << 2)
-
-//! \brief Defines the location of the CSA_CAL_B bits in the Control 6 register
-//!
+// Defines the location of the CSA_CAL_B bits in the Control 6 register
 #define DRV8320_CTRL06_CSA_CAL_B_BITS       (1 << 3)
-
-//! \brief Defines the location of the CSA_CAL_A bits in the Control 6 register
-//!
+// Defines the location of the CSA_CAL_A bits in the Control 6 register
 #define DRV8320_CTRL06_CSA_CAL_A_BITS       (1 << 4)
-
-//! \brief Defines the location of the DIS_SEN bits in the Control 6 register
-//!
+// Defines the location of the DIS_SEN bits in the Control 6 register
 #define DRV8320_CTRL06_DIS_SEN_BITS         (1 << 5)
-
-//! \brief Defines the location of the CSA_GAIN bits in the Control 6 register
-//!
+// Defines the location of the CSA_GAIN bits in the Control 6 register
 #define DRV8320_CTRL06_CSA_GAIN_BITS        (3 << 6)
-
-//! \brief Defines the location of the LS_REF bits in the Control 6 register
-//!
+// Defines the location of the LS_REF bits in the Control 6 register
 #define DRV8320_CTRL06_LS_REF_BITS          (1 << 8)
-
-//! \brief Defines the location of the VREF_DIV bits in the Control 6 register
-//!
+// Defines the location of the VREF_DIV bits in the Control 6 register
 #define DRV8320_CTRL06_VREF_DIV_BITS        (1 << 9)
-
-//! \brief Defines the location of the CSA_FET bits in the Control 6 register
-//!
+// Defines the location of the CSA_FET bits in the Control 6 register
 #define DRV8320_CTRL06_CSA_FET_BITS         (1 << 10)
 
 // **************************************************************************
 // the typedefs
-
-//! \brief Enumeration for the R/W modes
-//!
+// Enumeration for the R/W modes
 typedef enum
 {
     DRV8320_CTRLMODE_READ     = (1 << 15), //!< Read Mode
     DRV8320_CTRLMODE_WRITE    = (0 << 15)  //!< Write Mode
 } DRV8320_CtrlMode_e;
 
-//! \brief Enumeration for the Status 0 register, faults
-//!
+// Enumeration for the Status 0 register, faults
 typedef enum
 {
     DRV8320_VDS_LC      = (1 << 0),    //!< VDS overcurrent fault on C low-side MOSFET
@@ -315,8 +214,7 @@ typedef enum
     DRV8320_FAULT       = (1 << 10)    //!< FAULT type, 0-Warning, 1-Latched
 } DRV8320_STATUS00_WarningWatchdog_e;
 
-//! \brief Enumeration for the Status 1 register, OV/VDS faults
-//!
+// Enumeration for the Status 1 register, OV/VDS faults
 typedef enum
 {
     DRV8320_VGS_LC      = (1 << 0),    //!< VGS gate drive fault on C low-side MOSFET
@@ -332,8 +230,7 @@ typedef enum
     DRV8320_SA_OC       = (1 << 10)    //!< overcurrent on phase A
 } DRV8320_STATUS01_OvVdsFaults_e;
 
-//! \brief Enumeration for the driver PWM mode
-//!
+// Enumeration for the driver PWM mode
 typedef enum
 {
     DRV8320_PWMMODE_6 = (0 << 5),     //!< PWM_MODE = 6 inputs
@@ -341,9 +238,8 @@ typedef enum
     DRV8320_PWMMODE_1 = (2 << 5)      //!< PWM_MODE = 1 input
 } DRV8320_CTRL02_PWMMode_e;
 
-//! \brief Enumeration for the high side gate drive peak source current;
+// Enumeration for the high side gate drive peak source current;
 //! gate currents not consistent with DS
-//!
 typedef enum
 {
     DRV8320_ISOUR_HS_0P010_A = (0 << 4),  //!< IDRIVEP_HS = 0.010A
@@ -364,9 +260,8 @@ typedef enum
     DRV8320_ISOUR_HS_1P000_A = (15 << 4)  //!< IDRIVEP_HS = 1.000A
 } DRV8320_CTRL03_PeakSourCurHS_e;
 
-//! \brief Enumeration for the high side gate drive peak sink current;
+// Enumeration for the high side gate drive peak sink current;
 //! gate currents not consistent with DS
-//!
 typedef enum
 {
     DRV8320_ISINK_HS_0P020_A = (0 << 0),  //!< IDRIVEN_HS = 0.020A
@@ -387,18 +282,16 @@ typedef enum
     DRV8320_ISINK_HS_2P000_A = (15 << 0)  //!< IDRIVEN_HS = 2.000A
 } DRV8320_CTRL03_PeakSinkCurHS_e;
 
-//! \brief Enumeration for the high side and low side gate drive peak source
+// Enumeration for the high side and low side gate drive peak source
 //! time; adapt timings to DRV8320
-//!
 typedef enum
 {
     DRV8320_LOCK_LOCK     = (6 << 8),     //!< Lock settings
     DRV8320_LOCK_UNLOCK   = (3 << 8)      //!< Unlock settings
 } DRV8320_CTRL03_Lock_e;
 
-//! \brief Enumeration for the high side and low side gate drive peak source
+// Enumeration for the high side and low side gate drive peak source
 //! time; adapt timings to DRV8320
-//!
 typedef enum
 {
     DRV8320_TSOUR_500_NS  = (0 << 8),     //!< TDRIVE = 500ns
@@ -407,9 +300,8 @@ typedef enum
     DRV8320_TSOUR_4000_NS = (3 << 8)      //!< TDRIVE = 4000ns
 } DRV8320_CTRL04_PeakTime_e;
 
-//! \brief Enumeration for the low side gate drive peak source current;
+// Enumeration for the low side gate drive peak source current;
 //!  adapt current ratings
-//!
 typedef enum
 {
     DRV8320_ISOUR_LS_0P010_A = (0 << 4),  //!< IDRIVEP_LS = 0.010A
@@ -430,9 +322,8 @@ typedef enum
     DRV8320_ISOUR_LS_1P000_A = (15 << 4)  //!< IDRIVEP_LS = 1.000A
 } DRV8320_CTRL04_PeakSourCurLS_e;
 
-//! \brief Enumeration for the low side gate drive peak sink current;
+// Enumeration for the low side gate drive peak sink current;
 //!  adapt current ratings
-//!
 typedef enum
 {
     DRV8320_ISINK_LS_0P020_A = (0 << 0),  //!< IDRIVEN_LS = 0.020A
@@ -453,8 +344,7 @@ typedef enum
     DRV8320_ISINK_LS_2P000_A = (15 << 0)  //!< IDRIVEN_LS = 2.000A
 } DRV8320_CTRL04_PeakSinkCurLS_e;
 
-//! \brief Enumeration for the VDS comparator threshold
-//!
+// Enumeration for the VDS comparator threshold
 typedef enum
 {
     DRV8320_VDS_LEVEL_0P060_V = (0 << 0),    //!< VDS_LEVEL = 0.060V
@@ -475,9 +365,8 @@ typedef enum
     DRV8320_VDS_LEVEL_1P880_V = (15 << 0)    //!< VDS_LEVEL = 1.880V
 } DRV8320_CTRL05_VDSLVL_e;
 
-//! \brief Enumeration for the OCP/VDS sense deglitch time;
+// Enumeration for the OCP/VDS sense deglitch time;
 //!  adapt deglitch time comments
-//!
 typedef enum
 {
     DRV8320_VDSDEG_2_US = (0 << 4),       //!< OCP_DEG = 2us
@@ -486,8 +375,7 @@ typedef enum
     DRV8320_VDSDEG_8_US = (3 << 4)        //!< OCP_DEG = 8us
 } DRV8320_CTRL05_OcpDeg_e;
 
-//! \brief Enumeration for the OCP report mode
-//!
+// Enumeration for the OCP report mode
 typedef enum
 {
     DRV8320_LATCHED_SHUTDOWN = (0 << 6),  //!< OCP_MODE = Latched fault
@@ -496,8 +384,7 @@ typedef enum
     DRV8320_DISABLE_OCP      = (3 << 6)   //!< OCP_MODE = Disabled
 } DRV8320_CTRL05_OcpMode_e;
 
-//! \brief Enumeration for the driver dead time
-//!
+// Enumeration for the driver dead time
 typedef enum
 {
     DRV8320_DEADTIME_50_NS  = (0 << 8),   //!< DEAD_TIME = 50ns
@@ -506,8 +393,7 @@ typedef enum
     DRV8320_DEADTIME_400_NS = (3 << 8)    //!< DEAD_TIME = 400ns
 } DRV8320_CTRL05_DeadTime_e;
 
-//! \brief Enumeration for the register addresses
-//!
+// Enumeration for the register addresses
 typedef enum
 {
     DRV8320_ADDRESS_STATUS_0  = (0 << 11),  //!< Status Register 0
@@ -518,8 +404,7 @@ typedef enum
     DRV8320_ADDRESS_CONTROL_5 = (5 << 11)   //!< Control Register 5
 } DRV8320_Address_e;
 
-//! \brief Object for the DRV8320 STATUS00 register
-//!
+// Object for the DRV8320 STATUS00 register
 typedef struct _DRV8320_Stat00_t_
 {
     bool                  VDS_LC;         // Bits 0
@@ -535,8 +420,7 @@ typedef struct _DRV8320_Stat00_t_
     bool                  FAULT;          // Bits 10
 }DRV8320_Stat00_t;
 
-//! \brief Object for the DRV8320 STATUS01 register
-//!
+// Object for the DRV8320 STATUS01 register
 typedef struct _DRV8320_Stat01_t_
 {
     bool                  VGS_LC;         // Bits 0
@@ -552,8 +436,7 @@ typedef struct _DRV8320_Stat01_t_
     bool                  SA_OC;          // Bits 10
 }DRV8320_Stat01_t;
 
-//! \brief Object for the DRV8320 CTRL02 register
-//!
+// Object for the DRV8320 CTRL02 register
 typedef struct _DRV8320_Ctrl02_t_
 {
     bool                          CLR_FLT;        // Bits 0
@@ -568,8 +451,7 @@ typedef struct _DRV8320_Ctrl02_t_
     bool                          CTRL02_RSV1;    // Bits 10
 }DRV8320_Ctrl02_t;
 
-//! \brief Object for the DRV8320 CTRL03 register
-//!
+// Object for the DRV8320 CTRL03 register
 typedef struct _DRV8320_Ctrl03_t_
 {
     DRV8320_CTRL03_PeakSinkCurHS_e    IDRIVEN_HS;     // Bits 3-0
@@ -577,8 +459,7 @@ typedef struct _DRV8320_Ctrl03_t_
     DRV8320_CTRL03_Lock_e             LOCK;           // Bits 10-8
 }DRV8320_Ctrl03_t;
 
-//! \brief Object for the DRV8320 CTRL04 register
-//!
+// Object for the DRV8320 CTRL04 register
 typedef struct _DRV8320_Ctrl04_t_
 {
     DRV8320_CTRL04_PeakSinkCurLS_e    IDRIVEN_LS;     // Bits 3-0
@@ -587,8 +468,7 @@ typedef struct _DRV8320_Ctrl04_t_
     bool                              CBC;            // Bits 10
 }DRV8320_Ctrl04_t;
 
-//! \brief Object for the DRV8320 CTRL05 register
-//!
+// Object for the DRV8320 CTRL05 register
 typedef struct _DRV8320_Ctrl05_t_
 {
     DRV8320_CTRL05_VDSLVL_e           VDS_LVL;        // Bits 3-0
@@ -598,20 +478,17 @@ typedef struct _DRV8320_Ctrl05_t_
     bool                              TRETRY;         // Bits 10
 }DRV8320_Ctrl05_t;
 
-//! \brief Object for the DRV8320 registers and commands
-//!
+// Object for the DRV8320 registers and commands
 typedef struct _DRV8320_SPIVars_t_
 {
     DRV8320_Stat00_t          Stat_Reg_00;
     DRV8320_Stat01_t          Stat_Reg_01;
-
     DRV8320_Ctrl02_t          Ctrl_Reg_02;
     DRV8320_Ctrl03_t          Ctrl_Reg_03;
     DRV8320_Ctrl04_t          Ctrl_Reg_04;
     DRV8320_Ctrl05_t          Ctrl_Reg_05;
     bool                      writeCmd;
     bool                      readCmd;
-
     uint16_t                  manWriteAddr;
     uint16_t                  manReadAddr;
     uint16_t                  manWriteData;
@@ -620,8 +497,7 @@ typedef struct _DRV8320_SPIVars_t_
     bool                      manReadCmd;
 }DRV8320_SPIVars_t;
 
-//! \brief Defines the DRV8320 object
-//!
+// Defines the DRV8320 object
 typedef struct _DRV8320_Obj_
 {
     uint32_t  spiHandle;     //!< handle for the serial peripheral interface
@@ -631,28 +507,23 @@ typedef struct _DRV8320_Obj_
     bool      enableTimeOut; //!< timeout flag for DRV8320 enable
 } DRV8320_Obj;
 
-//! \brief Defines the DRV8320 handle
-//!
+// Defines the DRV8320 handle
 typedef struct _DRV8320_Obj_ *DRV8320_Handle;
 
-//! \brief Defines the DRV8320 Word type
-//!
+// Defines the DRV8320 Word type
 typedef  uint16_t    DRV8320_Word_t;
-
 // **************************************************************************
 // the globals
-
 // **************************************************************************
 // the function prototypes
-
-//! \brief     Initializes the DRV8320 object
+//     Initializes the DRV8320 object
 //! \param[in] pMemory   A pointer to the memory for the DRV8320 object
 //! \param[in] numBytes  The number of bytes allocated for the DRV8320
 //!                      object, bytes
 //! \return    The DRV8320 object handle
 extern DRV8320_Handle DRV8320_init(void *pMemory);
 
-//! \brief     Builds the control word
+//     Builds the control word
 //! \param[in] ctrlMode  The control mode
 //! \param[in] regName   The register name
 //! \param[in] data      The data
@@ -663,89 +534,82 @@ static inline DRV8320_Word_t DRV8320_buildCtrlWord(
                                             const uint16_t data)
 {
     DRV8320_Word_t ctrlWord = ctrlMode | regAddr | (data & DRV8320_DATA_MASK);
-
     return(ctrlWord);
 } // end of DRV8320_buildCtrlWord() function
 
-//! \brief     Enables the DRV8320
+//     Enables the DRV8320
 //! \param[in] handle     The DRV8320 handle
 extern void DRV8320_enable(DRV8320_Handle handle);
 
-//! \brief     Sets the SPI handle in the DRV8320
+//     Sets the SPI handle in the DRV8320
 //! \param[in] handle     The DRV8320 handle
 //! \param[in] spiHandle  The SPI handle to use
 void DRV8320_setSPIHandle(DRV8320_Handle handle,uint32_t spiHandle);
 
-//! \brief     Sets the GPIO number in the DRV8320
+//     Sets the GPIO number in the DRV8320
 //! \param[in] handle       The DRV8320 handle
 //! \param[in] gpioHandle   The GPIO number to use
 void DRV8320_setGPIOCSNumber(DRV8320_Handle handle,uint32_t gpioNumber);
 
-//! \brief     Sets the GPIO number in the DRV8320
+//     Sets the GPIO number in the DRV8320
 //! \param[in] handle       The DRV8320 handle
 //! \param[in] gpioHandle   The GPIO number to use
 void DRV8320_setGPIONumber(DRV8320_Handle handle,uint32_t gpioNumber);
 
-//! \brief     Resets the enable timeout flag
+//     Resets the enable timeout flag
 //! \param[in] handle   The DRV8320 handle
 static inline void DRV8320_resetEnableTimeout(DRV8320_Handle handle)
 {
     DRV8320_Obj *obj = (DRV8320_Obj *)handle;
-
     obj->enableTimeOut = false;
-
     return;
 } // end of DRV8320_resetEnableTimeout() function
 
-//! \brief     Resets the RX fifo timeout flag
+//     Resets the RX fifo timeout flag
 //! \param[in] handle   The DRV8320 handle
 static inline void DRV8320_resetRxTimeout(DRV8320_Handle handle)
 {
     DRV8320_Obj *obj = (DRV8320_Obj *)handle;
-
     obj->rxTimeOut = false;
-
     return;
 } // end of DRV8320_resetRxTimeout() function
 
-//! \brief     Initialize the interface to all 8320 SPI variables
+//     Initialize the interface to all 8320 SPI variables
 //! \param[in] handle  The DRV8320 handle
 extern void DRV8320_setupSPI(DRV8320_Handle handle,
                              DRV8320_SPIVars_t *drv8320SPIVars);
-
-//! \brief     Reads data from the DRV8320 register
+							 
+//     Reads data from the DRV8320 register
 //! \param[in] handle   The DRV8320 handle
 //! \param[in] regAddr  The register address
 //! \return    The data value
 extern uint16_t DRV8320_readSPI(DRV8320_Handle handle,
                                 const DRV8320_Address_e regAddr);
-
-//! \brief     Writes data to the DRV8320 register
+								
+//     Writes data to the DRV8320 register
 //! \param[in] handle   The DRV8320 handle
 //! \param[in] regAddr  The register name
 //! \param[in] data     The data value
 extern void DRV8320_writeSPI(DRV8320_Handle handle,
                              const DRV8320_Address_e regAddr,
                              const uint16_t data);
-
-//! \brief     Write to the DRV8320 SPI registers
+							 
+//     Write to the DRV8320 SPI registers
 //! \param[in] handle  The DRV8320 handle
 //! \param[in] drv8320SPIVars  The (DRV8320_SPIVars_t) structure that contains
 //!                           all DRV8320 Status/Control register options
 extern void DRV8320_writeData(DRV8320_Handle handle,
                               DRV8320_SPIVars_t *drv8320SPIVars);
-
-//! \brief     Read from the DRV8320 SPI registers
+							  
+//     Read from the DRV8320 SPI registers
 //! \param[in] handle  The DRV8320 handle
 //! \param[in] drv8320SPIVars  The (DRV8320_SPIVars_t) structure that contains
 //!                           all DRV8320 Status/Control register options
 extern void DRV8320_readData(DRV8320_Handle handle,
                              DRV8320_SPIVars_t *drv8320SPIVars);
-
+							 
 #ifdef __cplusplus
 }
 #endif // extern "C"
-
 //@}  // ingroup
-
 #endif // end of DRV8320_H definition

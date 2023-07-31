@@ -131,6 +131,11 @@
 			<locationURI>C2000WARE_MC_SDK_LOC/libraries/control/pi/source/pi.c</locationURI>
 		</link>
 		<link>
+			<name>sci.c</name>
+			<type>1</type>
+			<locationURI>C2000WARE_DLIB_ROOT/sci.c</locationURI>
+		</link>
+		<link>
 			<name>svgen.c</name>
 			<type>1</type>
 			<locationURI>C2000WARE_MC_SDK_LOC/libraries/transforms/svgen/source/svgen.c</locationURI>

@@ -1,6 +1,16 @@
 
 # eGoCart
 
+## Information
+
+This project is within the early planning-phase. More information will follow.
+
+Rough time-schedule:
+* July 2023: first tests with TI Motorware (Already done. Sensorless BLDC is rotating with working speed-controller controlled via SCI/UART)
+* August 2023: test with LAUNCHXL-F280049C and BOOSTXL-DRV8320RS. Design of the hardware (two 3-phase-inverters with voltage/current-measurement, gate-drivers and MOSFETs)
+* September 2023: test of the design and programming of the headup-display
+* October 2023: whole system working
+
 ## Overview
 
 This repository contains a BLDC-Motor-Controller with field-oriented-motor-control (FOC) using the TI C2000 TMS320F280049 with InstaSPIN-FOC control. This control is able to auto-detect a connected motor or can use a predefined motor.
@@ -13,17 +23,6 @@ The C2000 microcontroller receives its set-points either via SCI/UART based on a
 * two full-featured B6-inverters to control up to two motors independently
 * touchscreen headup-display using a RaspberryPi Zero
 * input-voltages either 24V, 36V or 48V with input-currents of up to 20A (1kW@48V)
-
-## Information
-
-This project is within the early planning-phase. More information will follow.
-
-Time-schedule:
-* 07/2023: first tests with TI Motorware (Already done. Sensorless BLDC is rotating with working speed-controller controlled via SCI/UART)
-* Begin of 08/2023: design of the hardware (two 3-phase-inverters with voltage/current-measurement, gate-drivers and MOSFETs)
-* Mid of 08/2023: Programming of motor-controller
-* 09/2023: test of the design and programming of the headup-display
-* 10/2023: whole system working
 
 ## Instructions
 * Download and install TI CodeComposerStudio from https://www.ti.com/tool/download/CCSTUDIO (v12.4 has been used for compiling)
