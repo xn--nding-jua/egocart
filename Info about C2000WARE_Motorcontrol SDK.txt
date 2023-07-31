@@ -1,0 +1,5 @@
+Demoprojects
+C:\ti\c2000\C2000Ware_MotorControl_SDK_5_00_00_00\solutions\common\sensorless_foc
+
+Files for BOOSTXL-DRV8320RS
+C:\ti\c2000\C2000Ware_MotorControl_SDK_5_00_00_00\solutions\boostxl_drv8320rs
