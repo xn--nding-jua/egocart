@@ -214,12 +214,17 @@ void main(void)
     // initialize the driver
     halHandle = HAL_init(&hal, sizeof(hal));
 
-    #ifdef COMM_SCI
-        Interrupt_register(INT_SCIA_RX, sciaRxISR);
-    #endif
-
     // set the driver parameters
     HAL_setParams(halHandle);
+
+    #ifdef COMM_SCI
+        sciTx_msg("Dual-Motor-Controller for BLDC\n\r\0");
+        sciTx_msg("v0.0.1, https://github.com/xn--nding-jua/egocart\n\r\0");
+    #endif
+
+    // enable LEDs on both BOOSTXL-DRV8320RS
+    HAL_turnLEDOn(halHandle, HAL_GPIO_LEDBOOSTXL1); // UserLED on BOOSTXL #1
+    HAL_turnLEDOn(halHandle, HAL_GPIO_LEDBOOSTXL2); // UserLED on BOOSTXL #2
 
     for(ctrlNum = HAL_MTR_1; ctrlNum <= HAL_MTR_2; ctrlNum++)
     {
@@ -444,7 +449,6 @@ void main(void)
         HAL_disablePWM(halMtrHandle[ctrlNum]);
     }
 
-
 #ifdef PWMDAC_ENABLE
     // set DAC parameters
     pwmDACData.periodMax =
@@ -467,6 +471,7 @@ void main(void)
     pwmDACData.gain[3] = -MATH_ONE_OVER_TWO_PI;
 #endif  // PWMDAC_ENABLE
 
+    // turn system off at beginning
     systemVars.flagEnableSystem = false;
 
     // initialize the interrupt vector table
@@ -477,257 +482,290 @@ void main(void)
 
     #ifdef COMM_SCI
         // enable SCI interrupts
+        Interrupt_register(INT_SCIA_RX, sciaRxISR);
         HAL_enableSCIInts(halHandle);
     #endif
 
-    // disable global interrupts
+    // enable global interrupts
     HAL_enableGlobalInts(halHandle);
 
     // enable debug interrupts
     HAL_enableDebugInt(halHandle);
 
-    // Waiting for enable system flag to be set
-    while(systemVars.flagEnableSystem == false)
-    {
-
-    }
-
-    motorVars[HAL_MTR_1].flagEnableSys = systemVars.flagEnableSystem;
-    motorVars[HAL_MTR_2].flagEnableSys = systemVars.flagEnableSystem;
-
-    //
-    // loop while the enable system flag is true
-    //
-    while(systemVars.flagEnableSystem == true)
-    {
-        if(systemVars.flagEnableSynControl == true)
-        {
-            motorVars[HAL_MTR_1].flagEnableRunAndIdentify = systemVars.flagEnableRun;
-            motorVars[HAL_MTR_1].speedRef_Hz = systemVars.speedSet_Hz;
-            motorVars[HAL_MTR_1].accelerationMax_Hzps = systemVars.accelerationMaxSet_Hzps;
-
-            motorVars[HAL_MTR_2].flagEnableRunAndIdentify = systemVars.flagEnableRun;
-            motorVars[HAL_MTR_2].speedRef_Hz = systemVars.speedSet_Hz;
-            motorVars[HAL_MTR_2].accelerationMax_Hzps = systemVars.accelerationMaxSet_Hzps;
-        }
-
-        //
-        // 1ms time base
-        //
-        if(HAL_getTimerStatus(halHandle, HAL_CPU_TIMER0))
-        {
-            motorVars[0].timerCnt_1ms++;
-
-            HAL_clearTimerFlag(halHandle, HAL_CPU_TIMER0);
-        }
-
+    // loop forever
+    while(true) {
         #ifdef COMM_SCI
             sciProcessCmd();
-        #endif
 
-        for(ctrlNum = HAL_MTR_1; ctrlNum <= HAL_MTR_2; ctrlNum++)
-        {
-            if(motorVars[ctrlNum].flagEnableRunAndIdentify == true)
-            {
-                if(motorVars[ctrlNum].flagRunIdentAndOnLine == false)
+            // check status of DRV8320RS every second
+            if ((counterLED > 8000) && (counterLED < 8005)) {
+                // check DRV8320RS for errors
+                for(ctrlNum = HAL_MTR_1; ctrlNum <= HAL_MTR_2; ctrlNum++)
                 {
-                    motorVars[ctrlNum].flagRunIdentAndOnLine = true;
-                    motorVars[ctrlNum].faultNow.all = 0;
-                }
-            }
-            else
-            {
-                motorVars[ctrlNum].flagRunIdentAndOnLine = false;
-            }
+                    drvSPI8320Vars[ctrlNum].readCmd=true;
+                    HAL_readDRVData(halMtrHandle[ctrlNum], &drvSPI8320Vars[ctrlNum]);
 
-            //
-            // CPU Timer 2 reserve for testing
-            //
+                    if (drvSPI8320Vars[ctrlNum].Stat_Reg_00.FAULT) {
+                        // error in DRV8320 detected
+                        if (ctrlNum == HAL_MTR_1) { sciTx_msg("BOOSTXL #1 ERROR! nFAULT: \0"); }
+                        if (ctrlNum == HAL_MTR_2) { sciTx_msg("BOOSTXL #2 ERROR! nFAULT: \0"); }
 
-            motorVars[ctrlNum].mainLoopCount++;
+                        if (drvSPI8320Vars[ctrlNum].Stat_Reg_00.VDS_OCP) { sciTx_msg("VDS_OCP \0"); }
+                        if (drvSPI8320Vars[ctrlNum].Stat_Reg_00.GDF) { sciTx_msg("GDF \0"); }
+                        if (drvSPI8320Vars[ctrlNum].Stat_Reg_00.UVLO) { sciTx_msg("UVLO \0"); }
+                        if (drvSPI8320Vars[ctrlNum].Stat_Reg_00.OTSD) { sciTx_msg("OTSD \0"); }
+                        if (drvSPI8320Vars[ctrlNum].Stat_Reg_00.VDS_HA) { sciTx_msg("VDS_HA \0"); }
+                        if (drvSPI8320Vars[ctrlNum].Stat_Reg_00.VDS_LA) { sciTx_msg("VDS_LA \0"); }
+                        if (drvSPI8320Vars[ctrlNum].Stat_Reg_00.VDS_HB) { sciTx_msg("VDS_HB \0"); }
+                        if (drvSPI8320Vars[ctrlNum].Stat_Reg_00.VDS_LB) { sciTx_msg("VDS_LB \0"); }
+                        if (drvSPI8320Vars[ctrlNum].Stat_Reg_00.VDS_HC) { sciTx_msg("VDS_HC \0"); }
+                        if (drvSPI8320Vars[ctrlNum].Stat_Reg_00.VDS_LC) { sciTx_msg("VDS_LC \0"); }
 
-            //
-            // set internal DAC value for on-chip comparator for current protection
-            //
-            {
-                uint_least8_t  cmpssCnt;
-
-                for(cmpssCnt=0; cmpssCnt<HAL_NUM_CMPSS_CURRENT; cmpssCnt++)
-                {
-                    HAL_setCMPSSDACValueHigh(halMtrHandle[ctrlNum],
-                                             cmpssCnt, motorVars[ctrlNum].dacValH);
-
-                    HAL_setCMPSSDACValueLow(halMtrHandle[ctrlNum],
-                                            cmpssCnt, motorVars[ctrlNum].dacValL);
-                }
-            }
-
-            // enable or disable force angle
-            EST_setFlag_enableForceAngle(estHandle[ctrlNum],
-                                         motorVars[ctrlNum].flagEnableForceAngle);
-
-            EST_setFlag_enableRsRecalc(estHandle[ctrlNum],
-                                       motorVars[ctrlNum].flagEnableRsRecalc);
-
-            EST_setFlag_enableRsOnLine(estHandle[ctrlNum],
-                                       motorVars[ctrlNum].flagEnableRsOnLine);
-
-            // enable or disable bypassLockRotor flag
-            if(userParams[ctrlNum].motor_type == MOTOR_TYPE_INDUCTION)
-            {
-                EST_setFlag_bypassLockRotor(estHandle[ctrlNum],
-                                            motorVars[ctrlNum].flagBypassLockRotor);
-            }
-
-            if(HAL_getPwmEnableStatus(halMtrHandle[ctrlNum]) == true)
-            {
-                if(HAL_getTripFaults(halMtrHandle[ctrlNum]) !=0)
-                {
-                    motorVars[ctrlNum].faultNow.bit.moduleOverCurrent = 1;
-                    faultFlag[ctrlNum] = HAL_getTripFaults(halMtrHandle[ctrlNum]);
-                }
-            }
-
-            motorVars[ctrlNum].faultUse.all = motorVars[ctrlNum].faultNow.all &
-                                                motorVars[ctrlNum].faultMask.all;
-
-            // Had some faults to stop the motor
-            if(motorVars[ctrlNum].faultUse.all != 0)
-            {
-                motorVars[ctrlNum].flagEnableRunAndIdentify = false;
-                motorVars[ctrlNum].flagRunIdentAndOnLine = false;
-            }
-
-            if((motorVars[ctrlNum].flagRunIdentAndOnLine == true) &&
-                    (motorVars[ctrlNum].flagEnableOffsetCalc == false))
-            {
-                if(HAL_getPwmEnableStatus(halMtrHandle[ctrlNum]) == false)
-                {
-                    // enable the estimator
-                    EST_enable(estHandle[ctrlNum]);
-
-                    // enable the trajectory generator
-                    EST_enableTraj(estHandle[ctrlNum]);
-
-                    // enable the PWM
-                    HAL_enablePWM(halMtrHandle[ctrlNum]);
-                }
-
-                TRAJ_setTargetValue(trajHandle_spd[ctrlNum], motorVars[ctrlNum].speedRef_Hz);
-                TRAJ_setMaxDelta(trajHandle_spd[ctrlNum],
-                                 (motorVars[ctrlNum].accelerationMax_Hzps / USER_M1_ISR_FREQ_Hz));
-            }
-            else if(motorVars[ctrlNum].flagEnableOffsetCalc == false)
-            {
-                // disable the estimator
-                EST_disable(estHandle[ctrlNum]);
-
-                // disable the trajectory generator
-                EST_disableTraj(estHandle[ctrlNum]);
-
-                // disable the PWM
-                HAL_disablePWM(halMtrHandle[ctrlNum]);
-
-                // clear integral outputs of the controllers
-                PI_setUi(piHandle_Id[ctrlNum], 0.0);
-                PI_setUi(piHandle_Iq[ctrlNum], 0.0);
-                PI_setUi(piHandle_fwc[ctrlNum], 0.0);
-                PI_setUi(piHandle_spd[ctrlNum], 0.0);
-
-                // clear current references
-                Idq_ref_A[ctrlNum].value[0] = 0.0;
-                Idq_ref_A[ctrlNum].value[1] = 0.0;
-
-                Idq_offset_A[ctrlNum].value[0] = 0.0;
-                Idq_offset_A[ctrlNum].value[1] = 0.0;
-
-                motorVars[ctrlNum].IdRated_A = EST_getIdRated_A(estHandle[ctrlNum]);
-
-                motorVars[ctrlNum].IsRef_A = 0.0;
-                motorVars[ctrlNum].angleCurrent_rad = 0.0;
-
-                TRAJ_setTargetValue(trajHandle_spd[ctrlNum], 0.0);
-                TRAJ_setIntValue(trajHandle_spd[ctrlNum], 0.0);
-            }
-
-            // check the trajectory generator
-            if(EST_isTrajError(estHandle[ctrlNum]) == true)
-            {
-                // disable the PWM
-                HAL_disablePWM(halMtrHandle[ctrlNum]);
-
-                // set the enable system flag to false
-                motorVars[ctrlNum].flagEnableSys = false;
-            }
-            else
-            {
-                // update the trajectory generator state
-                EST_updateTrajState(estHandle[ctrlNum]);
-            }
-
-            // check the estimator
-            if(EST_isError(estHandle[ctrlNum]) == true)
-            {
-                // disable the PWM
-                HAL_disablePWM(halMtrHandle[ctrlNum]);
-
-                // set the enable system flag to false
-                motorVars[ctrlNum].flagEnableSys = false;
-            }
-            else        // No any estimator error
-            {
-                motorVars[ctrlNum].Id_target_A = EST_getIntValue_Id_A(estHandle[ctrlNum]);
-
-                bool flagEstStateChanged = EST_updateState(estHandle[ctrlNum],0.0);
-
-                if(flagEstStateChanged == true)
-                {
-                    // configure the trajectory generator
-                    EST_configureTraj(estHandle[ctrlNum]);
-
-                    if(EST_isLockRotor(estHandle[ctrlNum]) ||
-                            (EST_isMotorIdentified(estHandle[ctrlNum])
-                                    && EST_isIdle(estHandle[ctrlNum])))
-                    {
-                        motorVars[ctrlNum].flagMotorIdentified = true;
-
-                        // clear the flag
-                        motorVars[ctrlNum].flagRunIdentAndOnLine = false;
+                        sciTx_msg("\n\r\0");
+                    }else{
+                        //if (ctrlNum == HAL_MTR_1) { sciTx_msg("BOOSTXL #1 OK\n\r\0"); }
+                        //if (ctrlNum == HAL_MTR_2) { sciTx_msg("BOOSTXL #2 OK\n\r\0"); }
                     }
                 }
             }
+        #endif
 
-            if(EST_isMotorIdentified(estHandle[ctrlNum]) == true)
+        motorVars[HAL_MTR_1].flagEnableSys = systemVars.flagEnableSystem;
+        motorVars[HAL_MTR_2].flagEnableSys = systemVars.flagEnableSystem;
+
+        // Waiting for enable system flag to be set
+        if (systemVars.flagEnableSystem == false) {
+            // wait for system to be enabled by user
+
+            // disable the PWM
+            HAL_disablePWM(halMtrHandle[HAL_MTR_1]);
+            HAL_disablePWM(halMtrHandle[HAL_MTR_2]);
+        }else{
+            // system is enabled
+            if(systemVars.flagEnableSynControl == true)
             {
-                if(motorVars[ctrlNum].flagSetupController == true)
+                motorVars[HAL_MTR_1].flagEnableRunAndIdentify = systemVars.flagEnableRun;
+                motorVars[HAL_MTR_1].speedRef_Hz = systemVars.speedSet_Hz;
+                motorVars[HAL_MTR_1].accelerationMax_Hzps = systemVars.accelerationMaxSet_Hzps;
+
+                motorVars[HAL_MTR_2].flagEnableRunAndIdentify = systemVars.flagEnableRun;
+                motorVars[HAL_MTR_2].speedRef_Hz = systemVars.speedSet_Hz;
+                motorVars[HAL_MTR_2].accelerationMax_Hzps = systemVars.accelerationMaxSet_Hzps;
+            }
+
+            //
+            // 1ms time base
+            //
+            if(HAL_getTimerStatus(halHandle, HAL_CPU_TIMER0))
+            {
+                motorVars[0].timerCnt_1ms++;
+
+                HAL_clearTimerFlag(halHandle, HAL_CPU_TIMER0);
+            }
+
+            #ifdef COMM_SCI
+                sciProcessCmd();
+            #endif
+
+            for(ctrlNum = HAL_MTR_1; ctrlNum <= HAL_MTR_2; ctrlNum++)
+            {
+                if(motorVars[ctrlNum].flagEnableRunAndIdentify == true)
                 {
-                    // update the controller
-                    updateControllers(ctrlNum);
+                    if(motorVars[ctrlNum].flagRunIdentAndOnLine == false)
+                    {
+                        motorVars[ctrlNum].flagRunIdentAndOnLine = true;
+                        motorVars[ctrlNum].faultNow.all = 0;
+                    }
                 }
                 else
                 {
-                    motorVars[ctrlNum].flagMotorIdentified = true;
-                    motorVars[ctrlNum].flagSetupController = true;
-
-                    setupControllers(ctrlNum);
+                    motorVars[ctrlNum].flagRunIdentAndOnLine = false;
                 }
-            }
 
-            // update the global variables
-            updateGlobalVariables(estHandle[ctrlNum], ctrlNum);
+                //
+                // CPU Timer 2 reserve for testing
+                //
 
-            #ifdef DRV8320_SPI
-            HAL_writeDRVData(halMtrHandle[ctrlNum], &drvSPI8320Vars[ctrlNum]);
+                motorVars[ctrlNum].mainLoopCount++;
 
-            HAL_readDRVData(halMtrHandle[ctrlNum], &drvSPI8320Vars[ctrlNum]);
-            #endif
+                //
+                // set internal DAC value for on-chip comparator for current protection
+                //
+                {
+                    uint_least8_t  cmpssCnt;
 
-        } // end of for(ctrlNum;)
-    } // end of while() loop
+                    for(cmpssCnt=0; cmpssCnt<HAL_NUM_CMPSS_CURRENT; cmpssCnt++)
+                    {
+                        HAL_setCMPSSDACValueHigh(halMtrHandle[ctrlNum],
+                                                 cmpssCnt, motorVars[ctrlNum].dacValH);
 
-    // disable the PWM
-    HAL_disablePWM(halMtrHandle[0]);
-    HAL_disablePWM(halMtrHandle[1]);
+                        HAL_setCMPSSDACValueLow(halMtrHandle[ctrlNum],
+                                                cmpssCnt, motorVars[ctrlNum].dacValL);
+                    }
+                }
+
+                // enable or disable force angle
+                EST_setFlag_enableForceAngle(estHandle[ctrlNum],
+                                             motorVars[ctrlNum].flagEnableForceAngle);
+
+                EST_setFlag_enableRsRecalc(estHandle[ctrlNum],
+                                           motorVars[ctrlNum].flagEnableRsRecalc);
+
+                EST_setFlag_enableRsOnLine(estHandle[ctrlNum],
+                                           motorVars[ctrlNum].flagEnableRsOnLine);
+
+                // enable or disable bypassLockRotor flag
+                if(userParams[ctrlNum].motor_type == MOTOR_TYPE_INDUCTION)
+                {
+                    EST_setFlag_bypassLockRotor(estHandle[ctrlNum],
+                                                motorVars[ctrlNum].flagBypassLockRotor);
+                }
+
+                if(HAL_getPwmEnableStatus(halMtrHandle[ctrlNum]) == true)
+                {
+                    if(HAL_getTripFaults(halMtrHandle[ctrlNum]) !=0)
+                    {
+                        motorVars[ctrlNum].faultNow.bit.moduleOverCurrent = 1;
+                        faultFlag[ctrlNum] = HAL_getTripFaults(halMtrHandle[ctrlNum]);
+                    }
+                }
+
+                motorVars[ctrlNum].faultUse.all = motorVars[ctrlNum].faultNow.all &
+                                                    motorVars[ctrlNum].faultMask.all;
+
+                // Had some faults to stop the motor
+                if(motorVars[ctrlNum].faultUse.all != 0)
+                {
+                    motorVars[ctrlNum].flagEnableRunAndIdentify = false;
+                    motorVars[ctrlNum].flagRunIdentAndOnLine = false;
+                }
+
+                if((motorVars[ctrlNum].flagRunIdentAndOnLine == true) &&
+                        (motorVars[ctrlNum].flagEnableOffsetCalc == false))
+                {
+                    if(HAL_getPwmEnableStatus(halMtrHandle[ctrlNum]) == false)
+                    {
+                        // enable the estimator
+                        EST_enable(estHandle[ctrlNum]);
+
+                        // enable the trajectory generator
+                        EST_enableTraj(estHandle[ctrlNum]);
+
+                        // enable the PWM
+                        HAL_enablePWM(halMtrHandle[ctrlNum]);
+                    }
+
+                    TRAJ_setTargetValue(trajHandle_spd[ctrlNum], motorVars[ctrlNum].speedRef_Hz);
+                    TRAJ_setMaxDelta(trajHandle_spd[ctrlNum],
+                                     (motorVars[ctrlNum].accelerationMax_Hzps / USER_M1_ISR_FREQ_Hz));
+                }
+                else if(motorVars[ctrlNum].flagEnableOffsetCalc == false)
+                {
+                    // disable the estimator
+                    EST_disable(estHandle[ctrlNum]);
+
+                    // disable the trajectory generator
+                    EST_disableTraj(estHandle[ctrlNum]);
+
+                    // disable the PWM
+                    HAL_disablePWM(halMtrHandle[ctrlNum]);
+
+                    // clear integral outputs of the controllers
+                    PI_setUi(piHandle_Id[ctrlNum], 0.0);
+                    PI_setUi(piHandle_Iq[ctrlNum], 0.0);
+                    PI_setUi(piHandle_fwc[ctrlNum], 0.0);
+                    PI_setUi(piHandle_spd[ctrlNum], 0.0);
+
+                    // clear current references
+                    Idq_ref_A[ctrlNum].value[0] = 0.0;
+                    Idq_ref_A[ctrlNum].value[1] = 0.0;
+
+                    Idq_offset_A[ctrlNum].value[0] = 0.0;
+                    Idq_offset_A[ctrlNum].value[1] = 0.0;
+
+                    motorVars[ctrlNum].IdRated_A = EST_getIdRated_A(estHandle[ctrlNum]);
+
+                    motorVars[ctrlNum].IsRef_A = 0.0;
+                    motorVars[ctrlNum].angleCurrent_rad = 0.0;
+
+                    TRAJ_setTargetValue(trajHandle_spd[ctrlNum], 0.0);
+                    TRAJ_setIntValue(trajHandle_spd[ctrlNum], 0.0);
+                }
+
+                // check the trajectory generator
+                if(EST_isTrajError(estHandle[ctrlNum]) == true)
+                {
+                    // disable the PWM
+                    HAL_disablePWM(halMtrHandle[ctrlNum]);
+
+                    // set the enable system flag to false
+                    motorVars[ctrlNum].flagEnableSys = false;
+                }
+                else
+                {
+                    // update the trajectory generator state
+                    EST_updateTrajState(estHandle[ctrlNum]);
+                }
+
+                // check the estimator
+                if(EST_isError(estHandle[ctrlNum]) == true)
+                {
+                    // disable the PWM
+                    HAL_disablePWM(halMtrHandle[ctrlNum]);
+
+                    // set the enable system flag to false
+                    motorVars[ctrlNum].flagEnableSys = false;
+                }
+                else        // No any estimator error
+                {
+                    motorVars[ctrlNum].Id_target_A = EST_getIntValue_Id_A(estHandle[ctrlNum]);
+
+                    bool flagEstStateChanged = EST_updateState(estHandle[ctrlNum],0.0);
+
+                    if(flagEstStateChanged == true)
+                    {
+                        // configure the trajectory generator
+                        EST_configureTraj(estHandle[ctrlNum]);
+
+                        if(EST_isLockRotor(estHandle[ctrlNum]) ||
+                                (EST_isMotorIdentified(estHandle[ctrlNum])
+                                        && EST_isIdle(estHandle[ctrlNum])))
+                        {
+                            motorVars[ctrlNum].flagMotorIdentified = true;
+
+                            // clear the flag
+                            motorVars[ctrlNum].flagRunIdentAndOnLine = false;
+                        }
+                    }
+                }
+
+                if(EST_isMotorIdentified(estHandle[ctrlNum]) == true)
+                {
+                    if(motorVars[ctrlNum].flagSetupController == true)
+                    {
+                        // update the controller
+                        updateControllers(ctrlNum);
+                    }
+                    else
+                    {
+                        motorVars[ctrlNum].flagMotorIdentified = true;
+                        motorVars[ctrlNum].flagSetupController = true;
+
+                        setupControllers(ctrlNum);
+                    }
+                }
+
+                // update the global variables
+                updateGlobalVariables(estHandle[ctrlNum], ctrlNum);
+
+                #ifdef DRV8320_SPI
+                HAL_writeDRVData(halMtrHandle[ctrlNum], &drvSPI8320Vars[ctrlNum]);
+
+                HAL_readDRVData(halMtrHandle[ctrlNum], &drvSPI8320Vars[ctrlNum]);
+                #endif
+            } // end of for(ctrlNum;)
+        } // end of if
+    } // end of while(true)
 } // end of main() function
 
 __interrupt void mainISR(void)
@@ -741,12 +779,13 @@ __interrupt void mainISR(void)
     if(counterLED > (uint32_t)(USER_M1_ISR_FREQ_Hz / LED_BLINK_FREQ_Hz))
     {
         HAL_toggleLED(halHandle,HAL_GPIO_LED2);
+        HAL_toggleLED(halHandle,HAL_GPIO_LEDBOOSTXL1);
+        HAL_toggleLED(halHandle,HAL_GPIO_LEDBOOSTXL2);
         counterLED = 0;
     }
 
     // acknowledge the ADC interrupt
     HAL_ackADCInt(halHandle,ADC_INT_NUMBER1);
-
 
     for(isrNum = HAL_MTR_1; isrNum <= HAL_MTR_2; isrNum++)
     {
@@ -1054,7 +1093,7 @@ void runOffsetsCalculation(const uint16_t motorNum)
             // AS0000E\r\n\0  ->   AS0050E\r\n\0   ->   AS2000E\r\n\0
 
             // test for "A" and "E"
-            if ((sciBufPos==9) && (sciCmdBuf[0]==65) && (sciCmdBuf[6]==69) && (sciCmdBuf[7]==13) && (sciCmdBuf[8]==10)) {
+            if (((sciCmdBuf[0] & 0x00FF) == 65) && ((sciCmdBuf[6] & 0x00FF) == 69)) {
                 // message seems to be consistent
 
                 // check for desired command
@@ -1109,7 +1148,15 @@ void runOffsetsCalculation(const uint16_t motorNum)
                     }else{
                         sciTx_msg("ERROR: Value out of spec!\n\r\0");
                     }
+                }else if (sciCmdBuf[1]==73){
+                    // received command I = "AIxxxxE"
+                    sciTx_msg("Dual-Motor-Controller for BLDC\n\r\0");
+                    sciTx_msg("v0.0.1, https://github.com/xn--nding-jua/egocart\n\r\0");
                 }
+            }else{
+                // error in frame
+                sciTx_msg("ERROR in received data:\n\r\0");
+                sciTx_msg(sciCmdBuf);
             }
 
             // reset cmd-flags
@@ -1129,6 +1176,7 @@ void runOffsetsCalculation(const uint16_t motorNum)
                 {
                 }
                 HWREGH(SCIA_BASE + SCI_O_TXBUF) = msg[i];
+                i++;
             }
         } else {
             while(msg[i] != '\0')
@@ -1137,6 +1185,7 @@ void runOffsetsCalculation(const uint16_t motorNum)
                 {
                 }
                 HWREGH(SCIA_BASE + SCI_O_TXBUF) = msg[i];
+                i++;
             }
         }
     }
@@ -1155,30 +1204,49 @@ void runOffsetsCalculation(const uint16_t motorNum)
         sciTx_uint16(((uint16_t*)& data)[0]);
     }
 
-    interrupt void sciaRxISR(void) {
+    /*
+    __interrupt void sciaTxISR(void) {
+        // Disable the TXRDY interrupt
+        SCI_disableInterrupt(SCIA_BASE, SCI_INT_TXRDY);
+        Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP9);
+    }
+    */
+
+    __interrupt void sciaRxISR(void) {
         uint16_t sciReceivedChar = SCI_readCharBlockingFIFO(SCIA_BASE) & 0x00FF;
 
         if(!sciCmdReady){
-            // show input
             if(SCI_ECHO_ON){
-                SCI_writeCharBlockingFIFO(SCIA_BASE, sciReceivedChar);
+                // echo received char back
+                //SCI_writeCharBlockingFIFO(SCIA_BASE, sciReceivedChar);
+                sciTx_uint8(sciReceivedChar);
             }
 
-            sciBufPos++;
-            if(sciBufPos < BUF_LEN){
-                sciCmdBuf[sciBufPos-1] = (char)sciReceivedChar; //Adding char.
-                sciCmdBuf[sciBufPos] = '\0'; //Appending null to indicate the end of the string.
-            }
+            // wait until first char is a "A"
+            if ((sciBufPos==0) && ((sciReceivedChar & 0x00FF) != 65)) {
+                // ignore this character as this is unexpected
+            }else{
+                sciBufPos++;
+                if(sciBufPos < BUF_LEN){
+                    sciCmdBuf[sciBufPos-1] = (char)sciReceivedChar; //Adding char.
+                    sciCmdBuf[sciBufPos] = '\0'; //Appending null to indicate the end of the string.
+                }
 
-            if (sciReceivedChar == 10) {
-                // end of sequence
-                sciCmdReady = true;
+                // check if we have reached the end of the message
+                if ((sciReceivedChar & 0x00FF) == 0x0D) {
+                    // end of sequence
+                    sciCmdReady = true;
+
+                    // flush the FIFO Rx Buffer
+                    while (SCI_getRxFIFOStatus(SCIA_BASE)>0) {
+                        sciReceivedChar = SCI_readCharBlockingFIFO(SCIA_BASE) & 0x00FF;
+                    }
+                }
             }
         }
 
         SCI_clearInterruptStatus(SCIA_BASE, SCI_INT_RXFF);
         Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP9);
-        return;
     }
 #endif
 

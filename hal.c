@@ -100,7 +100,9 @@ void HAL_enableSCIInts(HAL_Handle handle)
     HAL_Obj *obj = (HAL_Obj *)halHandle;
     SCI_setFIFOInterruptLevel(obj->sciHandle[0], SCI_FIFO_TX0, SCI_FIFO_RX2);
     SCI_enableInterrupt(obj->sciHandle[0], SCI_INT_RXFF);
+    //Interrupt_register(INT_SCIA_TX, sciaTxISR);
     Interrupt_enable(INT_SCIA_RX);
+    //Interrupt_enable(INT_SCIA_TX);
     Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP9);
 }
 
@@ -299,7 +301,9 @@ void HAL_setParams(HAL_Handle handle)
     // setup the timers
     HAL_setupTimers(handle, USER_SYSTEM_FREQ_MHz);
     // setup the sci
+#ifdef COMM_SCI
     HAL_setupSCIA(handle);
+#endif
     return;
 } // end of HAL_setParams() function
 
@@ -333,7 +337,7 @@ void HAL_MTR_setParams(HAL_MTR_Handle handle,
     HAL_setupDACs(handle, motorNum);
     // setup the CMPSSs
     HAL_setupCMPSSs(handle, motorNum);
-    // setup the spiB for DRV8320_Kit_RevD
+    // setup the SPI for DRV8320_Kit_RevD
     HAL_setupSPI(handle);
     // setup the drv8320 interface
     HAL_setupGate(handle, motorNum);
@@ -860,11 +864,13 @@ void HAL_setupGPIOs(HAL_Handle handle)
     GPIO_setDirectionMode(18, GPIO_DIR_MODE_IN);
     GPIO_setPadConfig(18, GPIO_PIN_TYPE_STD);
     // GPIO22->SPIB-CLK for J5-J7/J6-J8 connection
+    GPIO_setAnalogMode(22, GPIO_ANALOG_DISABLED); // enable GPIO22 as GPIO. See Manual page 81
     GPIO_setMasterCore(22, GPIO_CORE_CPU1);
     GPIO_setPinConfig(GPIO_22_SPICLKB);
     GPIO_setDirectionMode(22, GPIO_DIR_MODE_OUT);
     GPIO_setPadConfig(22, GPIO_PIN_TYPE_STD);
     // GPIO23->LaunchPad LED5
+    GPIO_setAnalogMode(23, GPIO_ANALOG_DISABLED); // enable GPIO23 as GPIO. See Manual page 81
     GPIO_setMasterCore(23, GPIO_CORE_CPU1);
     GPIO_setPinConfig(GPIO_23_GPIO23);
     GPIO_writePin(23, 0);
@@ -896,7 +902,7 @@ void HAL_setupGPIOs(HAL_Handle handle)
     GPIO_setPinConfig(GPIO_28_GPIO28);
     GPIO_writePin(28, 1);
     GPIO_setDirectionMode(28, GPIO_DIR_MODE_OUT);
-    GPIO_setPadConfig(28, GPIO_PIN_TYPE_STD);
+    GPIO_setPadConfig(28, GPIO_PIN_TYPE_PULLUP);
     // GPIO29->nFAULT for J5-J7/J6-J8 connection
     GPIO_setMasterCore(29, GPIO_CORE_CPU1);
     GPIO_setPinConfig(GPIO_29_GPIO29);
@@ -911,13 +917,13 @@ void HAL_setupGPIOs(HAL_Handle handle)
     GPIO_setMasterCore(31, GPIO_CORE_CPU1);
     GPIO_setPinConfig(GPIO_31_SPISOMIB);
     GPIO_setDirectionMode(31, GPIO_DIR_MODE_IN);
-    GPIO_setPadConfig(31, GPIO_PIN_TYPE_PULLUP);
-    // GPIO32->LED for JJ5-J7/J6-J8 connection
+    GPIO_setPadConfig(31, GPIO_PIN_TYPE_STD);
+    // GPIO32->LED for J5-J7/J6-J8 connection
     GPIO_setMasterCore(32, GPIO_CORE_CPU1);
     GPIO_setPinConfig(GPIO_32_GPIO32);
     GPIO_writePin(32, 0);
-    GPIO_setDirectionMode(31, GPIO_DIR_MODE_OUT);
-    GPIO_setPadConfig(32, GPIO_PIN_TYPE_PULLUP);
+    GPIO_setDirectionMode(32, GPIO_DIR_MODE_OUT);
+    GPIO_setPadConfig(32, GPIO_PIN_TYPE_STD);
     // GPIO33->Reserve (N/A)
     GPIO_setMasterCore(33, GPIO_CORE_CPU1);
     GPIO_setPinConfig(GPIO_33_GPIO33);
@@ -929,12 +935,28 @@ void HAL_setupGPIOs(HAL_Handle handle)
     GPIO_writePin(34, 0);
     GPIO_setDirectionMode(34, GPIO_DIR_MODE_OUT);
     GPIO_setPadConfig(34, GPIO_PIN_TYPE_STD);
-    // TDI
-    GPIO_setMasterCore(35, GPIO_CORE_CPU1);
-    GPIO_setPinConfig(GPIO_35_TDI);
-    // TDO
-    GPIO_setMasterCore(37, GPIO_CORE_CPU1);
-    GPIO_setPinConfig(GPIO_37_TDO);
+    #ifdef COMM_SCI
+        // GPIO35 is the SCI Rx pin.
+        GPIO_setMasterCore(35, GPIO_CORE_CPU1);
+        GPIO_setPinConfig (GPIO_35_SCIRXDA);
+        GPIO_setDirectionMode(35, GPIO_DIR_MODE_IN);
+        GPIO_setPadConfig(35, GPIO_PIN_TYPE_STD);
+        GPIO_setQualificationMode(35, GPIO_QUAL_ASYNC);
+
+        // GPIO37 is the SCI Tx pin.
+        GPIO_setMasterCore(37, GPIO_CORE_CPU1);
+        GPIO_setPinConfig (GPIO_37_SCITXDA);
+        GPIO_setDirectionMode(37, GPIO_DIR_MODE_OUT);
+        GPIO_setPadConfig(37, GPIO_PIN_TYPE_STD);
+        GPIO_setQualificationMode(37, GPIO_QUAL_ASYNC);
+    #else
+        // TDI
+        GPIO_setMasterCore(35, GPIO_CORE_CPU1);
+        GPIO_setPinConfig(GPIO_35_TDI);
+        // TDO
+        GPIO_setMasterCore(37, GPIO_CORE_CPU1);
+        GPIO_setPinConfig(GPIO_37_TDO);
+    #endif
     // GPIO39->Reserve (N/A)
     GPIO_setMasterCore(39, GPIO_CORE_CPU1);
     GPIO_setPinConfig(GPIO_39_GPIO39);
@@ -1434,9 +1456,11 @@ void HAL_setupQEP(HAL_MTR_Handle handle)
 void HAL_setupSCIA(HAL_Handle halHandle)
 {
     HAL_Obj *obj = (HAL_Obj *)halHandle;
+
     // Initialize SCIA and its FIFO.
     SCI_performSoftwareReset(obj->sciHandle[0]);
-    // Configure SCIA for echoback.
+
+    // Configure SCIA
     SCI_setConfig(obj->sciHandle[0], DEVICE_LSPCLK_FREQ, SCI_BAUDRATE,
                         ( SCI_CONFIG_WLEN_8 |
                           SCI_CONFIG_STOP_ONE |

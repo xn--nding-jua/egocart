@@ -78,18 +78,21 @@
     #define BUF_LEN 16 // length of the Rx-buffer
 	
     char sciCmdBuf[BUF_LEN]; // Rx-buffer
-    uint16_t sciBufPos = 0; // Position of the next char in the buffer
-    bool sciCmdReady = false; // Indicates that a command is ready for execution and blocks further input until reset to 0.
+    volatile uint16_t sciBufPos = 0; // Position of the next char in the buffer
+    volatile bool sciCmdReady = false; // Indicates that a command is ready for execution and blocks further input until reset to 0.
 	
     extern void sciProcessCmd();
     extern void sciTx_msg(char * msg);
     extern void sciTx_uint8(uint16_t data);
     extern void sciTx_uint16(uint16_t data);
     extern void sciTx_float(float32_t data);
+    //__interrupt void sciaTxISR(void);
     __interrupt void sciaRxISR(void);
 #endif
 
 #define LED_BLINK_FREQ_Hz           (1.0)     // 1Hz
+
+#define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
 
 #define OVER_VOLTAGE_BITS           0x0001    // DC Bus Over Voltage Fault
 #define UNDER_VOLTAGE_BITS          0x0002    // DC Bus Under Voltage Fault

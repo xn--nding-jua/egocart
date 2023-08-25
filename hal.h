@@ -41,10 +41,7 @@
 
 // platforms
 #include "hal_obj.h"
-//!
-//!
-//! \defgroup HAL HAL
-//!
+//HAL HAL
 //@{
 
 #ifdef __cplusplus
@@ -53,16 +50,15 @@ extern "C" {
 
 // **************************************************************************
 // the defines
-//! Trip Zones all interrupt
-//!
+// Trip Zones all interrupt
 #define HAL_TZ_INTERRUPT_ALL      EPWM_TZ_INTERRUPT_DCBEVT2 \
                                  + EPWM_TZ_INTERRUPT_DCBEVT1 \
                                  + EPWM_TZ_INTERRUPT_DCAEVT2 \
                                  + EPWM_TZ_INTERRUPT_DCAEVT1 \
                                  + EPWM_TZ_INTERRUPT_OST \
                                  + EPWM_TZ_INTERRUPT_CBC
-// Defines the comparator number for current prection
-//!
+
+// Defines the comparator number for current protection
 #define HAL_NUM_CMPSS_CURRENT       3
 #define MTR_1_PGA_GAIN              PGA_GAIN_12
 #define MTR_1_DAC_VALUE             2048
@@ -84,103 +80,86 @@ extern "C" {
                                     | EPWM_DC_COMBINATIONAL_TRIPIN11 \
                                     | EPWM_DC_COMBINATIONAL_TRIPIN12
 
+// *********** MOTOR 1 ***********
 // Defines the gpio for start command
-//!
 #define M1_HAL_START_CMD_GPIO            25
 // Defines the gpio for stop command
-//!
 #define M1_HAL_STOP_CMD_GPIO             25
 // Defines the gpio for the nFAULT of Power Module device
-//!
 #define M1_HAL_PM_nFAULT_GPIO            40
 // Defines the gpio for the OCTW of Power Module device
-//!
 #define M1_HAL_PM_nOCTW_GPIO             40
 // Defines the gpio for the SPI_CS of DRV device
-//!
 #define M1_HAL_DRV_SPI_CS_GPIO          57
 // Defines the gpio for the enable gate of DRV device
-//!
 #define M1_HAL_DRV_EN_GATE_GPIO         13
 // Defines the PWM deadband falling edge delay count (system clocks)
-//!
 #define M1_HAL_PWM_DBFED_CNT            1
 // Defines the PWM deadband rising edge delay count (system clocks)
-//!
 #define M1_HAL_PWM_DBRED_CNT            1
+
+// *********** MOTOR 2 ***********
 // Defines the gpio for start command
-//!
 #define M2_HAL_START_CMD_GPIO            32
 // Defines the gpio for stop command
-//!
 #define M2_HAL_STOP_CMD_GPIO             32
 // Defines the gpio for the nFAULT of Power Module device
-//!
 #define M2_HAL_PM_nFAULT_GPIO            29
 // Defines the gpio for the OCTW of Power Module device
-//!
 #define M2_HAL_PM_nOCTW_GPIO             29
 // Defines the gpio for the SPI_CS of DRV device
-//!
 #define M2_HAL_DRV_SPI_CS_GPIO          27
 // Defines the gpio for the enable gate of DRV device
-//!
 #define M2_HAL_DRV_EN_GATE_GPIO         28
 // Defines the PWM deadband falling edge delay count (system clocks)
-//!
 #define M2_HAL_PWM_DBFED_CNT            1
 // Defines the PWM deadband rising edge delay count (system clocks)
-//!
 #define M2_HAL_PWM_DBRED_CNT            1
 
+// *********** LED ***********
 // Defines the function to turn LEDs off
-//!
 #define HAL_turnLEDOff              HAL_setGPIOHigh
 // Defines the function to turn LEDs on
-//!
 #define HAL_turnLEDOn               HAL_setGPIOLow
 // Defines the function to toggle LEDs
-//!
 #define HAL_toggleLED               HAL_toggleGPIO
+
 // **************************************************************************
 // the typedefs
 // Enumeration for the LED numbers
-//!
 typedef enum
 {
-  HAL_GPIO_LED1 = 23,   //!< GPIO pin number for LaunchPad LED 4
-  HAL_GPIO_LED2 = 34,   //!< GPIO pin number for LaunchPad LED 5
-  HAL_GPIO_ISR  = 30,   //!< GPIO pin number for ISR Executing Time
-  HAL_GPIO_BML  = 31    //!< GPIO pin number for Main Loop Executing Time
+  HAL_GPIO_LED1 = 23,   // GPIO pin number for LaunchPad LED 4
+  HAL_GPIO_LED2 = 34,   // GPIO pin number for LaunchPad LED 5
+  HAL_GPIO_LEDBOOSTXL1 = 25,   // GPIO pin number for BOOSTXL #1 LED
+  HAL_GPIO_LEDBOOSTXL2 = 32,   // GPIO pin number for BOOSTXL #2 LED
+  HAL_GPIO_ISR  = 30,   // GPIO pin number for ISR Executing Time
+  HAL_GPIO_BML  = 31    // GPIO pin number for Main Loop Executing Time
 } HAL_LEDNumber_e;
 
 // Enumeration for the sensor types
-//!
 typedef enum
 {
-  HAL_SENSORTYPE_CURRENT = 0,  //!< Enumeration for current sensor
-  HAL_SENSORTYPE_VOLTAGE = 1   //!< Enumeration for voltage sensor
+  HAL_SENSORTYPE_CURRENT = 0,  // Enumeration for current sensor
+  HAL_SENSORTYPE_VOLTAGE = 1   // Enumeration for voltage sensor
 } HAL_SensorType_e;
 
 // Enumeration for the QEP setup
-//!
 typedef enum
 {
-  HAL_QEP_QEP1 = 0,  //!< Select QEP1
-  HAL_QEP_QEP2 = 1   //!< Select QEP2
+  HAL_QEP_QEP1 = 0,  // Select QEP1
+  HAL_QEP_QEP2 = 1   // Select QEP2
 } HAL_QEPSelect_e;
 
 // Enumeration for the CPU Timer
-//!
 typedef enum
 {
-    HAL_CPU_TIMER0 = 0,  //!< Select CPU Timer0
-    HAL_CPU_TIMER1 = 1,  //!< Select CPU Timer1
-    HAL_CPU_TIMER2 = 2,  //!< Select CPU Timer2
+    HAL_CPU_TIMER0 = 0,  // Select CPU Timer0
+    HAL_CPU_TIMER1 = 1,  // Select CPU Timer1
+    HAL_CPU_TIMER2 = 2,  // Select CPU Timer2
 } HAL_CPUTimerNum_e;
 
 // Enumeration for the Motor numbers
-//!
 typedef enum
 {
   HAL_MTR_1 = 0,
@@ -204,9 +183,9 @@ extern __interrupt void cla_EST_run_BackgroundTask(void);
 // **************************************************************************
 // the function prototypes
 //     Acknowledges an interrupt from the ADC so that another ADC interrupt can 
-//!            happen again.
-//! \param[in] handle     The hardware abstraction layer (HAL) handle
-//! \param[in] adcIntNum  The interrupt number
+//            happen again.
+// \param[in] handle     The hardware abstraction layer (HAL) handle
+// \param[in] adcIntNum  The interrupt number
 static inline void HAL_ackADCInt(HAL_Handle handle,const ADC_IntNumber adcIntNum)
 {
   HAL_Obj *obj = (HAL_Obj *)handle;
@@ -219,15 +198,15 @@ static inline void HAL_ackADCInt(HAL_Handle handle,const ADC_IntNumber adcIntNum
 } // end of HAL_ackADCInt() function
 
 //      Executes calibration routines
-//! \details    Values for offset and gain are programmed into OTP memory at
-//!             the TI factory.  This calls and internal function that programs
-//!             these offsets and gains into the ADC registers.
-//! \param[in]  handle  The hardware abstraction layer (HAL) handle
+// \details    Values for offset and gain are programmed into OTP memory at
+//             the TI factory.  This calls and internal function that programs
+//             these offsets and gains into the ADC registers.
+// \param[in]  handle  The hardware abstraction layer (HAL) handle
 extern void HAL_cal(HAL_Handle handle);
 
 //      Forces a CLA task
-//! \param[in]  handle     The hardware abstraction layer (HAL) handle
-//! \param[in]  taskFlags  The task to be forced
+// \param[in]  handle     The hardware abstraction layer (HAL) handle
+// \param[in]  taskFlags  The task to be forced
 static inline void HAL_forceCLATasks(HAL_Handle handle, const uint16_t taskFlags)
 {
   HAL_Obj *obj = (HAL_Obj *)handle;
@@ -237,8 +216,8 @@ static inline void HAL_forceCLATasks(HAL_Handle handle, const uint16_t taskFlags
 } // end of HAL_forceCLATasks() function
 
 //      Gets the run status of the specified CLA task
-//! \param[in]  handle      The hardware abstraction layer (HAL) handle
-//! \param[in]  taskNumber  The task to check the run status on
+// \param[in]  handle      The hardware abstraction layer (HAL) handle
+// \param[in]  taskNumber  The task to check the run status on
 static inline bool
 HAL_getCLATaskRunStatus(HAL_Handle handle, const CLA_TaskNumber taskNumber)
 {
@@ -248,41 +227,41 @@ HAL_getCLATaskRunStatus(HAL_Handle handle, const CLA_TaskNumber taskNumber)
 } // end of HAL_getCLATaskRunStatus() function
 
 //      Disables global interrupts
-//! \param[in]  handle  The hardware abstraction layer (HAL) handle
+// \param[in]  handle  The hardware abstraction layer (HAL) handle
 extern void HAL_disableGlobalInts(HAL_Handle handle);
 
 //      Enables the ADC interrupts
-//! \details    Enables the ADC interrupt in the PIE, and CPU.  Enables the 
-//!             interrupt to be sent from the ADC peripheral.
-//! \param[in]  handle  The hardware abstraction layer (HAL) handle
+// \details    Enables the ADC interrupt in the PIE, and CPU.  Enables the
+//             interrupt to be sent from the ADC peripheral.
+// \param[in]  handle  The hardware abstraction layer (HAL) handle
 extern void HAL_enableADCInts(HAL_Handle handle);
 
 //      Enables the ADC interrupts without CPU interrupts
-//! \details    Enables the ADC interrupts to only trigger CLA, and without
-//!             interrupting the CPU
-//! \param[in]  handle  The hardware abstraction layer (HAL) handle
+// \details    Enables the ADC interrupts to only trigger CLA, and without
+//             interrupting the CPU
+// \param[in]  handle  The hardware abstraction layer (HAL) handle
 extern void HAL_enableADCIntsToTriggerCLA(HAL_Handle handle);
 extern void HAL_enableSCIInts(HAL_Handle handle);
 
 //      Enables the debug interrupt
-//! \details    The debug interrupt is used for the real-time debugger.  It is
-//!             not needed if the real-time debugger is not used.  Clears
-//!             bit 1 of ST1.
-//! \param[in]  handle  The hardware abstraction layer (HAL) handle
+// \details    The debug interrupt is used for the real-time debugger.  It is
+//             not needed if the real-time debugger is not used.  Clears
+//             bit 1 of ST1.
+// \param[in]  handle  The hardware abstraction layer (HAL) handle
 extern void HAL_enableDebugInt(HAL_Handle handle);
 
 //      Enables the 8320/8301 device
-//! \details    Provides the correct timing to enable the drv8320
-//! \param[in]  handle  The hardware abstraction layer (HAL) handle
+// \details    Provides the correct timing to enable the drv8320
+// \param[in]  handle  The hardware abstraction layer (HAL) handle
 extern void HAL_enableDRV(HAL_MTR_Handle handle);
 
 //     Enables global interrupts
-//! \param[in] handle  The hardware abstraction layer (HAL) handle
+// \param[in] handle  The hardware abstraction layer (HAL) handle
 extern void HAL_enableGlobalInts(HAL_Handle handle);
 
 //     Gets the current scale factor
-//! \param[in] handle  The hardware abstraction layer (HAL) handle
-//! \return    The current scale factor
+// \param[in] handle  The hardware abstraction layer (HAL) handle
+// \return    The current scale factor
 static inline float32_t HAL_getCurrentScaleFactor(HAL_MTR_Handle handle)
 {
   HAL_MTR_Obj *obj = (HAL_MTR_Obj *)handle;
@@ -290,8 +269,8 @@ static inline float32_t HAL_getCurrentScaleFactor(HAL_MTR_Handle handle)
 } // end of HAL_getCurrentScaleFactor() function
 
 //     Gets the PWM duty cycle times
-//! \param[in] handle       The hardware abstraction layer (HAL) handle
-//! \param[in] pDutyCycles  A pointer to memory for the duty cycle durations
+// \param[in] handle       The hardware abstraction layer (HAL) handle
+// \param[in] pDutyCycles  A pointer to memory for the duty cycle durations
 static inline void HAL_getDutyCycles(HAL_MTR_Handle handle,uint16_t *pDutyCycles)
 {
   HAL_MTR_Obj *obj = (HAL_MTR_Obj *)handle;
@@ -305,8 +284,8 @@ static inline void HAL_getDutyCycles(HAL_MTR_Handle handle,uint16_t *pDutyCycles
 } // end of HAL_getDutyCycles() function
 
 //     Gets the number of current sensors
-//! \param[in] handle  The hardware abstraction layer (HAL) handle
-//! \return    The number of current sensors
+// \param[in] handle  The hardware abstraction layer (HAL) handle
+// \return    The number of current sensors
 static inline uint16_t HAL_getNumCurrentSensors(HAL_MTR_Handle handle)
 {
   HAL_MTR_Obj *obj = (HAL_MTR_Obj *)handle;
@@ -315,8 +294,8 @@ static inline uint16_t HAL_getNumCurrentSensors(HAL_MTR_Handle handle)
 } // end of HAL_getNumCurrentSensors() function
 
 //     Gets the number of voltage sensors
-//! \param[in] handle  The hardware abstraction layer (HAL) handle
-//! \return    The number of voltage sensors
+// \param[in] handle  The hardware abstraction layer (HAL) handle
+// \return    The number of voltage sensors
 static inline uint16_t HAL_getNumVoltageSensors(HAL_MTR_Handle handle)
 {
   HAL_MTR_Obj *obj = (HAL_MTR_Obj *)handle;
@@ -324,8 +303,8 @@ static inline uint16_t HAL_getNumVoltageSensors(HAL_MTR_Handle handle)
 } // end of HAL_getNumVoltageSensors() function
 
 //     Gets the pwm enable status
-//! \param[in]  handle  The hardware abstraction layer (HAL) handle
-//! \return    The pwm enable
+// \param[in]  handle  The hardware abstraction layer (HAL) handle
+// \return    The pwm enable
 static inline bool HAL_getPwmEnableStatus(HAL_MTR_Handle handle)
 {
   HAL_MTR_Obj *obj = (HAL_MTR_Obj *)handle;
@@ -333,8 +312,8 @@ static inline bool HAL_getPwmEnableStatus(HAL_MTR_Handle handle)
 } // end of HAL_getPwmStatus() function
 
 //     Gets the voltage scale factor
-//! \param[in] handle  The hardware abstraction layer (HAL) handle
-//! \return    The voltage scale factor
+// \param[in] handle  The hardware abstraction layer (HAL) handle
+// \return    The voltage scale factor
 static inline float32_t HAL_getVoltageScaleFactor(HAL_MTR_Handle handle)
 {
   HAL_MTR_Obj *obj = (HAL_MTR_Obj *)handle;
@@ -342,35 +321,35 @@ static inline float32_t HAL_getVoltageScaleFactor(HAL_MTR_Handle handle)
 } // end of HAL_getVoltageScaleFactor() function
 
 //      Configures the fault protection logic
-//! \details    Sets up the trip zone inputs so that when a comparator
-//!             signal from outside the micro-controller trips a fault,
-//!             the EPWM peripheral blocks will force the
-//!             power switches into a high impedance state.
-//! \param[in]  handle  The hardware abstraction layer (HAL) handle
+// \details    Sets up the trip zone inputs so that when a comparator
+//             signal from outside the micro-controller trips a fault,
+//             the EPWM peripheral blocks will force the
+//             power switches into a high impedance state.
+// \param[in]  handle  The hardware abstraction layer (HAL) handle
 extern void HAL_setupFaults(HAL_MTR_Handle handle,
                             const HAL_MotorNum_e motorNum);
 
 //      Initializes the hardware abstraction layer (HAL) object
-//! \details    Initializes all handles to the microcontroller peripherals.
-//!             Returns a handle to the HAL object.
-//! \param[in]  pMemory   A pointer to the memory for the hardware abstraction layer object
-//! \param[in]  numBytes  The number of bytes allocated for the hardware abstraction layer object, bytes
-//! \return     The hardware abstraction layer (HAL) object handle
+// \details    Initializes all handles to the microcontroller peripherals.
+//             Returns a handle to the HAL object.
+// \param[in]  pMemory   A pointer to the memory for the hardware abstraction layer object
+// \param[in]  numBytes  The number of bytes allocated for the hardware abstraction layer object, bytes
+// \return     The hardware abstraction layer (HAL) object handle
 extern HAL_Handle HAL_init(void *pMemory,const size_t numBytes);
 
 //      Initializes the hardware abstraction layer (HAL) object
-//! \details    Initializes all handles to the microcontroller peripherals.
-//!             Returns a handle to the HAL_MTR object.
-//! \param[in]  pMemory   A pointer to the memory for the hardware abstraction layer object
-//! \param[in]  numBytes  The number of bytes allocated for the hardware abstraction layer object, bytes
-//! \return     The hardware abstraction layer (HAL_MTR) object handle
+// \details    Initializes all handles to the microcontroller peripherals.
+//             Returns a handle to the HAL_MTR object.
+// \param[in]  pMemory   A pointer to the memory for the hardware abstraction layer object
+// \param[in]  numBytes  The number of bytes allocated for the hardware abstraction layer object, bytes
+// \return     The hardware abstraction layer (HAL_MTR) object handle
 extern HAL_MTR_Handle HAL_MTR_init(void *pMemory,
                                    const size_t numBytes,
                                    const HAL_MotorNum_e motorNum);
 
 //      Initializes the interrupt vector table
-//! \details    Points the ISR to the function mainISR.
-//! \param[in]  handle  The hardware abstraction layer (HAL) handle
+// \details    Points the ISR to the function mainISR.
+// \param[in]  handle  The hardware abstraction layer (HAL) handle
 static inline void HAL_initIntVectorTable(HAL_Handle handle)
  {
     Interrupt_register(INT_ADCC1, &mainISR);
@@ -378,12 +357,12 @@ static inline void HAL_initIntVectorTable(HAL_Handle handle)
  } // end of HAL_initIntVectorTable() function
 
 //      Reads the ADC data with offset
-//! \details    Reads in the ADC result registers and scales the values
-//!             according to the settings in user_m1.h or user_m2.h.
-//!             The structure gAdcData holds three phase voltages,
-//!             three line currents, and one DC bus voltage.
-//! \param[in]  handle    The hardware abstraction layer (HAL) handle
-//! \param[in]  pADCData  A pointer to the ADC data buffer
+// \details    Reads in the ADC result registers and scales the values
+//             according to the settings in user_m1.h or user_m2.h.
+//             The structure gAdcData holds three phase voltages,
+//             three line currents, and one DC bus voltage.
+// \param[in]  handle    The hardware abstraction layer (HAL) handle
+// \param[in]  pADCData  A pointer to the ADC data buffer
 static inline void HAL_readADCDataWithOffsets(HAL_Handle handle,
                                               HAL_MTR_Handle mtrHandle,
                                               HAL_ADCData_t *pADCData,
@@ -445,12 +424,12 @@ static inline void HAL_readADCDataWithOffsets(HAL_Handle handle,
 } // end of HAL_readADCDataWithOffsets() function
 
 //      Reads the ADC data without offsets
-//! \details    Reads in the ADC result registers and scales the values
-//!             according to the settings in user_m1.h or user_m2.h.
-//!             The structure gAdcData holds three phase voltages,
-//!             three line currents, and one DC bus voltage.
-//! \param[in]  handle    The hardware abstraction layer (HAL) handle
-//! \param[in]  pADCData  A pointer to the ADC data buffer
+// \details    Reads in the ADC result registers and scales the values
+//             according to the settings in user_m1.h or user_m2.h.
+//             The structure gAdcData holds three phase voltages,
+//             three line currents, and one DC bus voltage.
+// \param[in]  handle    The hardware abstraction layer (HAL) handle
+// \param[in]  pADCData  A pointer to the ADC data buffer
 static inline void HAL_readADCDataWithoutOffsets(HAL_Handle handle,
                                                  HAL_MTR_Handle mtrHandle,
                                                  HAL_ADCData_t *pADCData)
@@ -484,9 +463,9 @@ static inline void HAL_readADCDataWithoutOffsets(HAL_Handle handle,
 } // end of HAL_readADCDataWithOffsets() function
 
 //     Reads the timer count
-//! \param[in] handle       The hardware abstraction layer (HAL) handle
-//! \param[in] timerNumber  The timer number, 0,1 or 2
-//! \return    The timer count
+// \param[in] handle       The hardware abstraction layer (HAL) handle
+// \param[in] timerNumber  The timer number, 0,1 or 2
+// \return    The timer count
 static inline uint32_t
 HAL_readTimerCnt(HAL_Handle handle,const uint16_t timerNumber)
 {
@@ -496,8 +475,8 @@ HAL_readTimerCnt(HAL_Handle handle,const uint16_t timerNumber)
 } // end of HAL_readTimerCnt() function
 
 //     Sets the GPIO pin high
-//! \param[in] handle      The hardware abstraction layer (HAL) handle
-//! \param[in] gpioNumber  The GPIO number
+// \param[in] handle      The hardware abstraction layer (HAL) handle
+// \param[in] gpioNumber  The GPIO number
 static inline void HAL_setGPIOHigh(HAL_Handle handle,const uint32_t gpioNumber)
 {
   // set GPIO high
@@ -506,9 +485,9 @@ static inline void HAL_setGPIOHigh(HAL_Handle handle,const uint32_t gpioNumber)
 } // end of HAL_setGPIOHigh() function
 
 //     Read the GPIO pin
-//! \param[in] handle      The hardware abstraction layer (HAL) handle
-//! \param[in] gpioNumber  The GPIO number
-//! \return    The GPIO pin
+// \param[in] handle      The hardware abstraction layer (HAL) handle
+// \param[in] gpioNumber  The GPIO number
+// \return    The GPIO pin
 static inline uint32_t
 HAL_readGPIOData(HAL_Handle handle,const uint32_t gpioNumber)
 {
@@ -519,8 +498,8 @@ HAL_readGPIOData(HAL_Handle handle,const uint32_t gpioNumber)
 } // end of HAL_readGPIOData() function
 
 //     Sets the GPIO pin low
-//! \param[in] handle      The hardware abstraction layer (HAL) handle
-//! \param[in] gpioNumber  The GPIO number
+// \param[in] handle      The hardware abstraction layer (HAL) handle
+// \param[in] gpioNumber  The GPIO number
 static inline void HAL_setGPIOLow(HAL_Handle handle,const uint32_t gpioNumber)
 {
   // set GPIO low
@@ -529,9 +508,9 @@ static inline void HAL_setGPIOLow(HAL_Handle handle,const uint32_t gpioNumber)
 } // end of HAL_setGPIOLow() function
 
 //     Sets the value of the internal DAC of the high comparator
-//! \param[in] handle      The hardware abstraction layer (HAL) handle
-//! \param[in] cmpssNumber The CMPSS number
-//! \param[in] dacValue    The DAC value of the high comparator
+// \param[in] handle      The hardware abstraction layer (HAL) handle
+// \param[in] cmpssNumber The CMPSS number
+// \param[in] dacValue    The DAC value of the high comparator
 static inline void HAL_setCMPSSDACValueHigh(HAL_MTR_Handle handle,
                          const uint16_t cmpssNumber, uint16_t dacValue)
 {
@@ -542,9 +521,9 @@ static inline void HAL_setCMPSSDACValueHigh(HAL_MTR_Handle handle,
 } // end of HAL_setCMPSSDACValueHigh() function
 
 //     Sets the value of the internal DAC of the low comparator
-//! \param[in] handle      The hardware abstraction layer (HAL) handle
-//! \param[in] cmpssNumber The CMPSS number
-//! \param[in] dacValue    The DAC value of the low comparator
+// \param[in] handle      The hardware abstraction layer (HAL) handle
+// \param[in] cmpssNumber The CMPSS number
+// \param[in] dacValue    The DAC value of the low comparator
 static inline void HAL_setCMPSSDACValueLow(HAL_MTR_Handle handle,
                         const uint16_t cmpssNumber, uint16_t dacValue)
 {
@@ -555,8 +534,8 @@ static inline void HAL_setCMPSSDACValueLow(HAL_MTR_Handle handle,
 } // end of HAL_setCMPSSDACValueLow() function
 
 //     Sets the number of voltage sensors
-//! \param[in] handle             The hardware abstraction layer (HAL) handle
-//! \param[in] numVoltageSensors  The number of voltage sensors
+// \param[in] handle             The hardware abstraction layer (HAL) handle
+// \param[in] numVoltageSensors  The number of voltage sensors
 static inline void HAL_setNumVoltageSensors(HAL_MTR_Handle handle,const uint16_t numVoltageSensors)
 {
   HAL_MTR_Obj *obj = (HAL_MTR_Obj *)handle;
@@ -565,8 +544,8 @@ static inline void HAL_setNumVoltageSensors(HAL_MTR_Handle handle,const uint16_t
 } // end of HAL_setNumVoltageSensors() function
 
 //     Sets the number of current sensors
-//! \param[in] handle             The hardware abstraction layer (HAL) handle
-//! \param[in] numCurrentSensors  The number of current sensors
+// \param[in] handle             The hardware abstraction layer (HAL) handle
+// \param[in] numCurrentSensors  The number of current sensors
 static inline void HAL_setNumCurrentSensors(HAL_MTR_Handle handle,const uint16_t numCurrentSensors)
 {
   HAL_MTR_Obj *obj = (HAL_MTR_Obj *)handle;
@@ -575,114 +554,114 @@ static inline void HAL_setNumCurrentSensors(HAL_MTR_Handle handle,const uint16_t
 } // end of HAL_setNumCurrentSensors() function
 
 //      Sets the hardware abstraction layer parameters
-//! \details    Sets up the microcontroller peripherals.  Creates all of the scale
-//!             factors for the ADC voltage and current conversions.  Sets the initial
-//!             offset values for voltage and current measurements.
-//! \param[in]  handle       The hardware abstraction layer (HAL) handle
+// \details    Sets up the microcontroller peripherals.  Creates all of the scale
+//             factors for the ADC voltage and current conversions.  Sets the initial
+//             offset values for voltage and current measurements.
+// \param[in]  handle       The hardware abstraction layer (HAL) handle
 extern void HAL_setParams(HAL_Handle handle);
 
 //      Sets the hardware abstraction layer parameters
-//! \details    Sets up the microcontroller peripherals.  Creates all of the scale
-//!             factors for the ADC voltage and current conversions.  Sets the initial
-//!             offset values for voltage and current measurements.
-//! \param[in]  handle       The hardware abstraction layer (HAL) handle
+// \details    Sets up the microcontroller peripherals.  Creates all of the scale
+//             factors for the ADC voltage and current conversions.  Sets the initial
+//             offset values for voltage and current measurements.
+// \param[in]  handle       The hardware abstraction layer (HAL) handle
 extern void HAL_MTR_setParams(HAL_MTR_Handle handle,
                               const HAL_MotorNum_e motorNum);
-							  
+
 //      Sets up the ADCs (Analog to Digital Converters)
-//! \param[in]  handle  The hardware abstraction layer (HAL) handle
+// \param[in]  handle  The hardware abstraction layer (HAL) handle
 extern void HAL_setupADCs(HAL_Handle handle);
 
 //      Sets up the ADCs (Analog to Digital Converters)
-//! \param[in]  handle  The hardware abstraction layer (HAL) handle
+// \param[in]  handle  The hardware abstraction layer (HAL) handle
 extern void HAL_runADCZeroOffsetCalibration(uint32_t base);
 
 //      Sets up the PGAs (Programmable Gain Amplifiers)
-//! \param[in]  handle  The hardware abstraction layer (HAL) handle
+// \param[in]  handle  The hardware abstraction layer (HAL) handle
 extern void HAL_setupPGAs(HAL_MTR_Handle handle,
                           const HAL_MotorNum_e motorNum);
 
 //      Sets up the CMPSSs (Comparator Subsystems)
-//! \param[in]  handle  The hardware abstraction layer (HAL) handle
+// \param[in]  handle  The hardware abstraction layer (HAL) handle
 extern void HAL_setupCMPSSs(HAL_MTR_Handle handle,
                             const HAL_MotorNum_e motorNum);
 
 //      Sets up the DACs (Buffered Digital-to-Analog Converter)
-//! \param[in]  handle  The hardware abstraction layer (HAL) handle
+// \param[in]  handle  The hardware abstraction layer (HAL) handle
 extern void HAL_setupDACs(HAL_MTR_Handle handle,
                           const HAL_MotorNum_e motorNum);
 
 //      Sets up the clocks
-//! \details    Sets up the micro-controller's main oscillator
-//! \param[in]  handle  The hardware abstraction layer (HAL) handle
+// \details    Sets up the micro-controller's main oscillator
+// \param[in]  handle  The hardware abstraction layer (HAL) handle
 extern void HAL_setupClks(HAL_Handle handle);
 
 //     Sets up the GATE object
-//! \param[in] handle       The hardware abstraction layer (HAL) handle
+// \param[in] handle       The hardware abstraction layer (HAL) handle
 extern void HAL_setupGate(HAL_MTR_Handle handle,
                           const HAL_MotorNum_e motorNum);
-						  
+
 //     Sets up the GPIO (General Purpose I/O) pins
-//! \param[in] handle  The hardware abstraction layer (HAL) handle
+// \param[in] handle  The hardware abstraction layer (HAL) handle
 extern void HAL_setupGPIOs(HAL_Handle handle);
 
 //     Sets up the FLASH.
-//! \param[in] handle  The hardware abstraction layer (HAL) handle
+// \param[in] handle  The hardware abstraction layer (HAL) handle
 extern void HAL_setupFlash(HAL_Handle handle);
 
 //     Sets up the CLA
-//! \param[in] handle  The hardware abstraction layer (HAL) handle
+// \param[in] handle  The hardware abstraction layer (HAL) handle
 extern void HAL_setupCLA(HAL_Handle handle);
 
 //     Sets up the peripheral clocks
-//! \param[in] handle  The hardware abstraction layer (HAL) handle
+// \param[in] handle  The hardware abstraction layer (HAL) handle
 extern void HAL_setupPeripheralClks(HAL_Handle handle);
 
 //     Sets up the PIE (Peripheral Interrupt Expansion)
-//! \param[in] handle  The hardware abstraction layer (HAL) handle
+// \param[in] handle  The hardware abstraction layer (HAL) handle
 extern void HAL_setupPIE(HAL_Handle handle);
 
 //     Sets up the PWMs (Pulse Width Modulators)
-//! \param[in] handle          The hardware abstraction layer (HAL) handle
-//! \param[in] systemFreq_MHz  The system frequency, MHz
+// \param[in] handle          The hardware abstraction layer (HAL) handle
+// \param[in] systemFreq_MHz  The system frequency, MHz
 extern void HAL_setupPWMDACs(HAL_Handle handle,
                    const float32_t systemFreq_MHz);
-				   
+
 //     Sets up the QEP peripheral
-//! \param[in] handle  The hardware abstraction layer (HAL) handle
+// \param[in] handle  The hardware abstraction layer (HAL) handle
 extern void HAL_setupQEP(HAL_MTR_Handle handle);
 
 //     Sets up the SCIA
-//! \param[in] handle  The hardware abstraction layer (HAL) handle
+// \param[in] handle  The hardware abstraction layer (HAL) handle
 extern void HAL_setupSCIA(HAL_Handle handle);
 
 //     Sets up the SPI
-//! \param[in] handle  The hardware abstraction layer (HAL) handle
+// \param[in] handle  The hardware abstraction layer (HAL) handle
 extern void HAL_setupSPI(HAL_MTR_Handle handle);
 
 //     Sets up the timers
-//! \param[in] handle          The hardware abstraction layer (HAL) handle
-//! \param[in] systemFreq_MHz  The system frequency, MHz
+// \param[in] handle          The hardware abstraction layer (HAL) handle
+// \param[in] systemFreq_MHz  The system frequency, MHz
 extern void HAL_setupTimers(HAL_Handle handle,const float32_t systemFreq_MHz);
 
 //     Sets up the timers
-//! \param[in] handle          The hardware abstraction layer (HAL) handle
-//! \param[in] cpuTimerNumber  The CPU timer number
+// \param[in] handle          The hardware abstraction layer (HAL) handle
+// \param[in] cpuTimerNumber  The CPU timer number
 bool HAL_getTimerStatus(HAL_Handle halHandle, const uint16_t cpuTimerNumber);
 
 //     Sets up the timers
-//! \param[in] handle          The hardware abstraction layer (HAL) handle
-//! \param[in] cpuTimerNumber  The CPU timer number
+// \param[in] handle          The hardware abstraction layer (HAL) handle
+// \param[in] cpuTimerNumber  The CPU timer number
 void HAL_clearTimerFlag(HAL_Handle halHandle, const uint16_t cpuTimerNumber);
 
 //     Sets up the DMA for datalog
-//! \param[in] handle          The hardware abstraction layer (HAL) handle
-//! \param[in] dmaChNumber     The DMC Channel Number
-//! \param[in] dlogDestAddr    The Datalog buffer dest address
-//! \param[in] dlogSrcAddr     The Datalog buffer src address
+// \param[in] handle          The hardware abstraction layer (HAL) handle
+// \param[in] dmaChNumber     The DMC Channel Number
+// \param[in] dlogDestAddr    The Datalog buffer dest address
+// \param[in] dlogSrcAddr     The Datalog buffer src address
 void HAL_setupDlogWithDMA(HAL_Handle handle, const uint16_t dmaChNumber,
                      const void *dlogDestAddr, const void *dlogSrcAddr);
-					 
+
 //     reset the DMA for datalog
 static inline void HAL_resetDlogWithDMA(void)
 {
@@ -690,8 +669,8 @@ static inline void HAL_resetDlogWithDMA(void)
     return;
 }
 //     Force trig the DMA channel for datalog
-//! \param[in] handle          The hardware abstraction layer (HAL) handle
-//! \param[in] dmaChNumber     The DMC Channel Number
+// \param[in] handle          The hardware abstraction layer (HAL) handle
+// \param[in] dmaChNumber     The DMC Channel Number
 static inline void HAL_trigDlogWithDMA(HAL_Handle handle, const uint16_t DMAChannel)
 {
     HAL_Obj *obj = (HAL_Obj *)handle;
@@ -701,8 +680,8 @@ static inline void HAL_trigDlogWithDMA(HAL_Handle handle, const uint16_t DMAChan
 } // end of HAL_trigDlogWithDMA() function
 
 //     Toggles the GPIO pin
-//! \param[in] handle      The hardware abstraction layer (HAL) handle
-//! \param[in] gpioNumber  The GPIO number
+// \param[in] handle      The hardware abstraction layer (HAL) handle
+// \param[in] gpioNumber  The GPIO number
 static inline void HAL_toggleGPIO(HAL_Handle handle,const uint32_t gpioNumber)
 {
     // set GPIO high
@@ -711,8 +690,8 @@ static inline void HAL_toggleGPIO(HAL_Handle handle,const uint32_t gpioNumber)
 } // end of HAL_toggleGPIO() function
 
 //     Writes DAC data to the PWM comparators for DAC output
-//! \param[in] handle    The hardware abstraction layer (HAL) handle
-//! \param[in] pPWMDACData  The pointer to the DAC data
+// \param[in] handle    The hardware abstraction layer (HAL) handle
+// \param[in] pPWMDACData  The pointer to the DAC data
 static inline void HAL_writePWMDACData(HAL_Handle handle, HAL_PWMDACData_t *pPWMDACData)
 {
     HAL_Obj *obj = (HAL_Obj *)handle;
@@ -765,19 +744,19 @@ static inline void HAL_writePWMDACData(HAL_Handle handle, HAL_PWMDACData_t *pPWM
 } // end of HAL_writeDacData() function
 
 //     Writes DAC data to the PWM comparators for DAC output
-//! \param[in] handle    The hardware abstraction layer (HAL) handle
-//! \param[in] pPWMDACData  The pointer to the DAC data
+// \param[in] handle    The hardware abstraction layer (HAL) handle
+// \param[in] pPWMDACData  The pointer to the DAC data
 void HAL_setPWMDACParameters(HAL_Handle handle, HAL_PWMDACData_t *pPWMDACData);
 
-//! \brief
-//! \param[in]
-//! \param[in]
+// \brief
+// \param[in]
+// \param[in]
 void HAL_clearDataRAM(void *pMemory, uint16_t lengthMemory);
 
 //     Reads PWM period register
-//! \param[in] handle     The hardware abstraction layer (HAL) handle
-//! \param[in] pwmNumber  The PWM number
-//! \return    The PWM period value
+// \param[in] handle     The hardware abstraction layer (HAL) handle
+// \param[in] pwmNumber  The PWM number
+// \return    The PWM period value
 static inline uint16_t
 HAL_readPWMPeriod(HAL_MTR_Handle handle,const uint16_t pwmNumber)
 {
@@ -789,8 +768,8 @@ HAL_readPWMPeriod(HAL_MTR_Handle handle,const uint16_t pwmNumber)
 } // end of HAL_readPWMPeriod() function
 
 //     Writes PWM data to the PWM comparators for motor control
-//! \param[in] handle    The hardware abstraction layer (HAL) handle
-//! \param[in] pPWMData  The pointer to the PWM data
+// \param[in] handle    The hardware abstraction layer (HAL) handle
+// \param[in] pPWMData  The pointer to the PWM data
 static inline void HAL_writePWMData(HAL_MTR_Handle handle,const HAL_PWMData_t *pPWMData)
 {
     HAL_MTR_Obj *obj = (HAL_MTR_Obj *)handle;
@@ -813,9 +792,9 @@ static inline void HAL_writePWMData(HAL_MTR_Handle handle,const HAL_PWMData_t *p
 } // end of HAL_writePWMData() function
 
 //      Enables the PWM devices
-//! \details    Turns on the outputs of the EPWM peripheral which will allow
-//!             the power switches to be controlled.
-//! \param[in]  handle  The hardware abstraction layer (HAL) handle
+// \details    Turns on the outputs of the EPWM peripheral which will allow
+//             the power switches to be controlled.
+// \param[in]  handle  The hardware abstraction layer (HAL) handle
 static inline void HAL_enablePWM(HAL_MTR_Handle handle)
 {
     HAL_MTR_Obj *obj = (HAL_MTR_Obj *)handle;
@@ -827,9 +806,9 @@ static inline void HAL_enablePWM(HAL_MTR_Handle handle)
 } // end of HAL_enablePWM() function
 
 //      Disables the PWM device
-//! \details    Turns off the outputs of the EPWM peripherals which will put
-//!             the power switches into a high impedance state.
-//! \param[in]  handle  The hardware abstraction layer (HAL) handle
+// \details    Turns off the outputs of the EPWM peripherals which will put
+//             the power switches into a high impedance state.
+// \param[in]  handle  The hardware abstraction layer (HAL) handle
 static inline void HAL_disablePWM(HAL_MTR_Handle handle)
 {
   HAL_MTR_Obj *obj = (HAL_MTR_Obj *)handle;
@@ -841,47 +820,47 @@ static inline void HAL_disablePWM(HAL_MTR_Handle handle)
 } // end of HAL_disablePWM() function
 
 //     Sets up the PWMs (Pulse Width Modulators)
-//! \param[in] handle          The hardware abstraction layer (HAL) handle
-//! \param[in] systemFreq_MHz  The system frequency, MHz
-//! \param[in] pwmPeriod_usec  The PWM period, usec
-//! \param[in] numPWMTicksPerISRTick  The number of PWM clock ticks per ISR clock tick
+// \param[in] handle          The hardware abstraction layer (HAL) handle
+// \param[in] systemFreq_MHz  The system frequency, MHz
+// \param[in] pwmPeriod_usec  The PWM period, usec
+// \param[in] numPWMTicksPerISRTick  The number of PWM clock ticks per ISR clock tick
 extern void HAL_setupPWMs(HAL_MTR_Handle handle,
                           const HAL_MotorNum_e motorNum);
-						  
+
 #ifdef DRV8320_SPI
 //     Writes data to the driver
-//! \param[in] handle         The hardware abstraction layer (HAL) handle
-//! \param[in] drv8320SPIVars  SPI variables
+// \param[in] handle         The hardware abstraction layer (HAL) handle
+// \param[in] drv8320SPIVars  SPI variables
 void HAL_writeDRVData(HAL_MTR_Handle handle, DRV8320_SPIVars_t *drv8320SPIVars);
 //     Reads data from the driver
-//! \param[in] handle         The hardware abstraction layer (HAL) handle
-//! \param[in] drv8320SPIVars  SPI variables
+// \param[in] handle         The hardware abstraction layer (HAL) handle
+// \param[in] drv8320SPIVars  SPI variables
 void HAL_readDRVData(HAL_MTR_Handle handle, DRV8320_SPIVars_t *drv8320SPIVars);
 //     Sets up the SPI interface for the driver
-//! \param[in] handle         The hardware abstraction layer (HAL) handle
-//! \param[in] drv8320SPIVars  SPI variables
+// \param[in] handle         The hardware abstraction layer (HAL) handle
+// \param[in] drv8320SPIVars  SPI variables
 extern void HAL_setupDRVSPI(HAL_MTR_Handle handle,
                             DRV8320_SPIVars_t *drv8320SPIVars);
 #endif  // DRV8320_SPI
 
 #ifdef DRV8301_SPI
 //     Writes data to the driver
-//! \param[in] handle         The hardware abstraction layer (HAL) handle
-//! \param[in] Spi_8301_Vars  SPI variables
+// \param[in] handle         The hardware abstraction layer (HAL) handle
+// \param[in] Spi_8301_Vars  SPI variables
 void HAL_writeDRVData(HAL_MTR_Handle handle, DRV8301_SPIVars_t *Spi_8301_Vars);
 //     Reads data from the driver
-//! \param[in] handle         The hardware abstraction layer (HAL) handle
-//! \param[in] Spi_8301_Vars  SPI variables
+// \param[in] handle         The hardware abstraction layer (HAL) handle
+// \param[in] Spi_8301_Vars  SPI variables
 void HAL_readDRVData(HAL_MTR_Handle handle, DRV8301_SPIVars_t *Spi_8301_Vars);
 //     Sets up the SPI interface for the driver
-//! \param[in] handle         The hardware abstraction layer (HAL) handle
-//! \param[in] Spi_8301_Vars  SPI variables
+// \param[in] handle         The hardware abstraction layer (HAL) handle
+// \param[in] Spi_8301_Vars  SPI variables
 extern void HAL_setupDRVSPI(HAL_MTR_Handle handle, DRV8301_SPIVars_t *Spi_8301_Vars);
 #endif
 
 //     Sets the current scale factor in the hal
-//! \param[in] handle      The hardware abstraction layer (HAL) handle
-//! \param[in] current_sf  The current scale factor
+// \param[in] handle      The hardware abstraction layer (HAL) handle
+// \param[in] current_sf  The current scale factor
 static inline void HAL_setCurrentScaleFactor(HAL_MTR_Handle handle, const float32_t current_sf)
 {
   HAL_MTR_Obj *obj = (HAL_MTR_Obj *)handle;
@@ -889,8 +868,8 @@ static inline void HAL_setCurrentScaleFactor(HAL_MTR_Handle handle, const float3
   return;
 } // end of HAL_setCurrentScaleFactor() function
 //     Sets the voltage scale factor in the hal
-//! \param[in] handle      The hardware abstraction layer (HAL) handle
-//! \param[in] voltage_sf  The voltage scale factor
+// \param[in] handle      The hardware abstraction layer (HAL) handle
+// \param[in] voltage_sf  The voltage scale factor
 static inline void HAL_setVoltageScaleFactor(HAL_MTR_Handle handle, const float32_t voltage_sf)
 {
   HAL_MTR_Obj *obj = (HAL_MTR_Obj *)handle;

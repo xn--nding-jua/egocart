@@ -51,6 +51,7 @@
 
 // user defines
 #define DRV8320_SPI // use TI DRV8320RS gatedriver
+#define _BOOSTXL_8320RS_REVA_ // use TI BOOSTXL-DRV8320RS-PiggyBack. Alternatives: BOARD_BSXL8320RS_REVA, BOARD_DRV8301_REVD, BOARD_HVMTRPFC_REV1P1, BOARD_DRV8312_REVD, BOARD_IDDK_REV2P1
 #define COMM_SCI // use SCI for communication
 #define SCI_BAUDRATE 38400
 #define MOTOR_MAX_SPEED 3500 // rpm

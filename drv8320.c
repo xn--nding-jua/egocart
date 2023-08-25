@@ -309,7 +309,7 @@ uint16_t DRV8320_readSPI(DRV8320_Handle handle,
     // reset the Rx fifo pointer to zero
     SPI_resetRxFIFO(obj->spiHandle);
     SPI_enableFIFO(obj->spiHandle);
-//  GPIO_writePin(obj->gpioNumber_CS, 0);
+    //GPIO_writePin(obj->gpioNumber_CS, 0); // CS will be set by hardware SPI
     // wait for registers to update
     for(n = 0; n < 0x06; n++)
     {
@@ -327,7 +327,7 @@ uint16_t DRV8320_readSPI(DRV8320_Handle handle,
         }
     }
     WaitTimeOut = 0xffff;
-//  GPIO_writePin(obj->gpioNumber_CS, 1);
+    //GPIO_writePin(obj->gpioNumber_CS, 1); // CS will be set by hardware SPI
     // Read the word
     readWord = SPI_readDataNonBlocking(obj->spiHandle);
     return(readWord & DRV8320_DATA_MASK);
@@ -344,7 +344,7 @@ void DRV8320_writeSPI(DRV8320_Handle handle, const DRV8320_Address_e regAddr,
     // reset the Rx fifo pointer to zero
     SPI_resetRxFIFO(obj->spiHandle);
     SPI_enableFIFO(obj->spiHandle);
-    //  GPIO_writePin(obj->gpioNumber_CS, 0);
+    //GPIO_writePin(obj->gpioNumber_CS, 0); // CS will be set by hardware SPI
     // wait for GPIO
     for(n = 0; n < 0x06; n++)
     {
@@ -357,7 +357,7 @@ void DRV8320_writeSPI(DRV8320_Handle handle, const DRV8320_Address_e regAddr,
     {
         __asm(" NOP");
     }
-    //  GPIO_writePin(obj->gpioNumber_CS, 1);
+    //GPIO_writePin(obj->gpioNumber_CS, 1); // CS will be set by hardware SPI
     return;
 }  // end of DRV8320_writeSPI() function
 
