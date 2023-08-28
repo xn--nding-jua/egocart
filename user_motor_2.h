@@ -645,6 +645,8 @@ extern "C" {
 #define USER_M2_MOTOR_IND_EST_CURRENT_A      (-2.0)
 #define USER_M2_MOTOR_MAX_CURRENT_A          (5.0)
 #define USER_M2_MOTOR_FLUX_EXC_FREQ_Hz       (40.0)
+#define USER_M2_MOTOR_INERTIA_Kgm2           (7.06154e-06)
+#define USER_M2_MOTOR_RATED_VOLTAGE_V        (36.0)
 
 // Number of lines on the motor's quadrature encoder
 #define USER_M2_MOTOR_NUM_ENC_SLOTS          (1000)
