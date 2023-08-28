@@ -69,6 +69,7 @@ extern "C" {
 #define MTR_2_DAC_VALUE             2048
 #define MTR_2_CMPSS_DACH_VALUE      2048+1024+512
 #define MTR_2_CMPSS_DACL_VALUE      2048-1024-512
+
 #define MTR_1_TZ_SIGNAL             EPWM_TZ_SIGNAL_OSHT2
 #define MTR_1_XBAR_IMPUT            XBAR_INPUT2
 #define MTR_1_DCTRIPIN              EPWM_DC_COMBINATIONAL_TRIPIN7 \
@@ -369,57 +370,29 @@ static inline void HAL_readADCDataWithOffsets(HAL_Handle handle,
                                               const HAL_MotorNum_e motorNum)
 {
   HAL_Obj *obj = (HAL_Obj *)handle;
-  float32_t value;
   float32_t current_sf = -HAL_getCurrentScaleFactor(mtrHandle);
   float32_t voltage_sf = HAL_getVoltageScaleFactor(mtrHandle);
   if(motorNum == HAL_MTR_1)
   {
-      // convert phase A current        ->RA0/A14
-      value = (float32_t)ADC_readResult(obj->adcResult[0], ADC_SOC_NUMBER0);
-      pADCData->I_A.value[0] = value * current_sf;
-      // convert phase B current        ->RC0/C7
-      value = (float32_t)ADC_readResult(obj->adcResult[2], ADC_SOC_NUMBER0);
-      pADCData->I_A.value[1] = value * current_sf;
-      // convert phase C current        ->RB0/B7
-      value = (float32_t)ADC_readResult(obj->adcResult[1], ADC_SOC_NUMBER0);
-      pADCData->I_A.value[2] = value * current_sf;
-      // convert phase A voltage        ->RA1/A5
-      value = (float32_t)ADC_readResult(obj->adcResult[0], ADC_SOC_NUMBER1);
-      pADCData->V_V.value[0] = value * voltage_sf;
-      // convert phase B voltage        ->RB1/B0
-      value = (float32_t)ADC_readResult(obj->adcResult[1], ADC_SOC_NUMBER1);
-      pADCData->V_V.value[1] = value * voltage_sf;
-      // convert phase C voltage        ->RC1/C2
-      value = (float32_t)ADC_readResult(obj->adcResult[2], ADC_SOC_NUMBER1);
-      pADCData->V_V.value[2] = value * voltage_sf;
-      // convert dcBus voltage          ->RB2/B1
-      value = (float32_t)ADC_readResult(obj->adcResult[1], ADC_SOC_NUMBER2);
-      pADCData->dcBus_V = value * voltage_sf;
+      pADCData->I_A.value[0] = ((float32_t)ADC_readResult(obj->adcResult[0], ADC_SOC_NUMBER0)) * current_sf; // I_A = PGA5_OUT -> A14
+      pADCData->I_A.value[1] = ((float32_t)ADC_readResult(obj->adcResult[2], ADC_SOC_NUMBER0)) * current_sf; // I_B = PGA3_OUT -> B10/C7
+      pADCData->I_A.value[2] = ((float32_t)ADC_readResult(obj->adcResult[1], ADC_SOC_NUMBER0)) * current_sf; // I_C = PGA1_OUT -> A11/B7
+      pADCData->V_V.value[0] = ((float32_t)ADC_readResult(obj->adcResult[0], ADC_SOC_NUMBER1)) * voltage_sf; // V_A = A5
+      pADCData->V_V.value[1] = ((float32_t)ADC_readResult(obj->adcResult[1], ADC_SOC_NUMBER1)) * voltage_sf; // V_B = B0
+      pADCData->V_V.value[2] = ((float32_t)ADC_readResult(obj->adcResult[2], ADC_SOC_NUMBER1)) * voltage_sf; // V_C = C2
+      pADCData->dcBus_V = ((float32_t)ADC_readResult(obj->adcResult[1], ADC_SOC_NUMBER2)) * voltage_sf; // V_DC = B1
   }
   else if(motorNum == HAL_MTR_2)
   {
-      // convert phase A current        ->RB3/B9
-      value = (float32_t)ADC_readResult(obj->adcResult[1], ADC_SOC_NUMBER3);
-      pADCData->I_A.value[0] = value * current_sf;
-      // convert phase B current        ->RA2/A15
-      value = (float32_t)ADC_readResult(obj->adcResult[0], ADC_SOC_NUMBER2);
-      pADCData->I_A.value[1] = value * current_sf;
-      // convert phase C current        ->RC2/C9
-      value = (float32_t)ADC_readResult(obj->adcResult[2], ADC_SOC_NUMBER2);
-      pADCData->I_A.value[2] = value * current_sf;
-      // convert phase A voltage        ->RA3/A6
-      value = (float32_t)ADC_readResult(obj->adcResult[0], ADC_SOC_NUMBER3);
-      pADCData->V_V.value[0] = value * voltage_sf;
-      // convert phase B voltage        ->RB4/B6
-      value = (float32_t)ADC_readResult(obj->adcResult[1], ADC_SOC_NUMBER4);
-      pADCData->V_V.value[1] = value * voltage_sf;
-      // convert phase C voltage        ->RC3/C14
-      value = (float32_t)ADC_readResult(obj->adcResult[2], ADC_SOC_NUMBER3);
-      pADCData->V_V.value[2] = value * voltage_sf;
-      // convert dcBus voltage          ->RC4/C1
-      value = (float32_t)ADC_readResult(obj->adcResult[2], ADC_SOC_NUMBER4);
-      pADCData->dcBus_V = value * voltage_sf;
+      pADCData->I_A.value[0] = ((float32_t)ADC_readResult(obj->adcResult[1], ADC_SOC_NUMBER3)) * current_sf; // I_A = PGA2_OUT -> A12/B9
+      pADCData->I_A.value[1] = ((float32_t)ADC_readResult(obj->adcResult[0], ADC_SOC_NUMBER2)) * current_sf; // I_B = PGA6_OUT -> A15
+      pADCData->I_A.value[2] = ((float32_t)ADC_readResult(obj->adcResult[2], ADC_SOC_NUMBER2)) * current_sf; // I_C = PGA4_OUT -> B11/C9
+      pADCData->V_V.value[0] = ((float32_t)ADC_readResult(obj->adcResult[0], ADC_SOC_NUMBER3)) * voltage_sf; // V_A = A6
+      pADCData->V_V.value[1] = ((float32_t)ADC_readResult(obj->adcResult[1], ADC_SOC_NUMBER4)) * voltage_sf; // V_B = B6
+      pADCData->V_V.value[2] = ((float32_t)ADC_readResult(obj->adcResult[2], ADC_SOC_NUMBER3)) * voltage_sf; // V_C = C14
+      pADCData->dcBus_V = ((float32_t)ADC_readResult(obj->adcResult[2], ADC_SOC_NUMBER4)) * voltage_sf; // V_DC = C1
   }
+
   return;
 } // end of HAL_readADCDataWithOffsets() function
 
@@ -435,30 +408,16 @@ static inline void HAL_readADCDataWithoutOffsets(HAL_Handle handle,
                                                  HAL_ADCData_t *pADCData)
 {
   HAL_Obj *obj = (HAL_Obj *)handle;
-  float32_t value;
   float32_t current_sf = -HAL_getCurrentScaleFactor(mtrHandle);
   float32_t voltage_sf = HAL_getVoltageScaleFactor(mtrHandle);
-  // convert phase A current
-  value = (float32_t)ADC_readResult(obj->adcResult[1], ADC_SOC_NUMBER0);
-  pADCData->I_A.value[0] = value * current_sf;
-  // convert phase B current
-  value = (float32_t)ADC_readResult(obj->adcResult[2], ADC_SOC_NUMBER1);
-  pADCData->I_A.value[1] = value * current_sf;
-  // convert phase C current
-  value = (float32_t)ADC_readResult(obj->adcResult[0], ADC_SOC_NUMBER2);
-  pADCData->I_A.value[2] = value * current_sf;
-  // convert phase A voltage
-  value = (float32_t)ADC_readResult(obj->adcResult[2], ADC_SOC_NUMBER3);
-  pADCData->V_V.value[0] = value * voltage_sf;
-  // convert phase B voltage
-  value = (float32_t)ADC_readResult(obj->adcResult[0], ADC_SOC_NUMBER4);
-  pADCData->V_V.value[1] = value * voltage_sf;
-  // convert phase C voltage
-  value = (float32_t)ADC_readResult(obj->adcResult[1], ADC_SOC_NUMBER5);
-  pADCData->V_V.value[2] = value * voltage_sf;
-  // convert dcBus voltage
-  value = (float32_t)ADC_readResult(obj->adcResult[1], ADC_SOC_NUMBER6);
-  pADCData->dcBus_V = value * voltage_sf;
+
+  pADCData->I_A.value[0] = ((float32_t)ADC_readResult(obj->adcResult[1], ADC_SOC_NUMBER0)) * current_sf;
+  pADCData->I_A.value[1] = ((float32_t)ADC_readResult(obj->adcResult[2], ADC_SOC_NUMBER0)) * current_sf;
+  pADCData->I_A.value[2] = ((float32_t)ADC_readResult(obj->adcResult[0], ADC_SOC_NUMBER0)) * current_sf;
+  pADCData->V_V.value[0] = ((float32_t)ADC_readResult(obj->adcResult[2], ADC_SOC_NUMBER1)) * voltage_sf;
+  pADCData->V_V.value[1] = ((float32_t)ADC_readResult(obj->adcResult[0], ADC_SOC_NUMBER1)) * voltage_sf;
+  pADCData->V_V.value[2] = ((float32_t)ADC_readResult(obj->adcResult[1], ADC_SOC_NUMBER1)) * voltage_sf;
+  pADCData->dcBus_V = ((float32_t)ADC_readResult(obj->adcResult[1], ADC_SOC_NUMBER2)) * voltage_sf;
   return;
 } // end of HAL_readADCDataWithOffsets() function
 

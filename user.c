@@ -88,41 +88,17 @@ void USER_setDualMotorParams(USER_Params *pUserParams,
     pUserParams->maxVsMag_V = USER_M1_MOTOR_RATED_VOLTAGE_V;
     if((USER_M1_BYPASS_MOTOR_ID == 1) && (pUserParams->flag_bypassMotorId == true))
     {
-        // Marathon 56H17T2001
-        // pUserParams->BWc_rps = MATH_TWO_PI * 100.0;
-        // pUserParams->BWdelta = (float32_t)4.0;
-        // pUserParams->Kctrl_Wb_p_kgm2 = 3.0 * pUserParams->motor_numPolePairs
-        //                                * 0.1 / (2.0 * 0.0001);           // 3.0 * numPolesPairs * rotorFlux_Wb / (2.0 * J_kg_m2);
-        // Estun
-        // pUserParams->BWc_rps = MATH_TWO_PI * 40.0;
-        // pUserParams->BWdelta = (float32_t)4.0;
-        // pUserParams->Kctrl_Wb_p_kgm2 = 3.0 * pUserParams->motor_numPolePairs
-        //                                * 0.0625 / (2.0 * 0.000031);      // 3.0 * numPolesPairs * rotorFlux_Wb / (2.0 * J_kg_m2);
-        // Anaheim
-//        pUserParams->BWc_rps = MATH_TWO_PI * (float32_t)100.0;
-//        pUserParams->BWdelta = (float32_t)10.0;
-//        pUserParams->Kctrl_Wb_p_kgm2 = (float32_t)3.0 *
-//                                       pUserParams->motor_numPolePairs *
-//                                       pUserParams->motor_ratedFlux_Wb /
-//                                       (float32_t) (2.0 * USER_M1_MOTOR_INERTIA_Kgm2);       // 3.0 * pUserParams->motor_numPolePairs * 0.1 / (2.0 * 0.00001);
-        // M2310PLN04K
         pUserParams->BWc_rps = MATH_TWO_PI * (float32_t)400.0;
         pUserParams->BWdelta = (float32_t)10.0;
         pUserParams->Kctrl_Wb_p_kgm2 = (float32_t)3.0 *
                                        pUserParams->motor_numPolePairs *
                                        pUserParams->motor_ratedFlux_Wb /
                                        (float32_t) (2.0 * USER_M1_MOTOR_INERTIA_Kgm2);
-        // nidec_fan
-        // pUserParams->BWc_rps = MATH_TWO_PI * (float32_t)4000.0;
-        // pUserParams->BWdelta = (float32_t)4.0;
-        // pUserParams->Kctrl_Wb_p_kgm2 = (float32_t)3.0 *
-        //                                 pUserParams->motor_numPolePairs *
-        //                                 pUserParams->motor_ratedFlux_Wb /
-        //                                 (float32_t) (2.0 * 0.000004802);   // 3.0 * pUserParams->motor_numPolePairs * 0.1 / (2.0 * 0.00001);
     }
     else
     {
         pUserParams->flag_bypassMotorId = false;
+
         pUserParams->BWc_rps = MATH_TWO_PI * (float32_t)100.0;
         pUserParams->BWdelta = (float32_t)10.0;
         pUserParams->Kctrl_Wb_p_kgm2 = (float32_t)3.0 *
@@ -261,41 +237,18 @@ void USER_setDualMotorParams(USER_Params *pUserParams,
     pUserParams->maxVsMag_V = USER_M2_MOTOR_RATED_VOLTAGE_V;
     if((USER_M2_BYPASS_MOTOR_ID == 1) && (pUserParams->flag_bypassMotorId == true))
     {
-        // Marathon 56H17T2001
-        // pUserParams->BWc_rps = MATH_TWO_PI * 100.0;
-        // pUserParams->BWdelta = (float32_t)4.0;
-        // pUserParams->Kctrl_Wb_p_kgm2 = 3.0 * pUserParams->motor_numPolePairs
-        //                                * 0.1 / (2.0 * 0.0001);           // 3.0 * numPolesPairs * rotorFlux_Wb / (2.0 * J_kg_m2);
-        // Estun
-        // pUserParams->BWc_rps = MATH_TWO_PI * 40.0;
-        // pUserParams->BWdelta = (float32_t)4.0;
-        // pUserParams->Kctrl_Wb_p_kgm2 = 3.0 * pUserParams->motor_numPolePairs
-        //                                * 0.0625 / (2.0 * 0.000031);      // 3.0 * numPolesPairs * rotorFlux_Wb / (2.0 * J_kg_m2);
-        // Anaheim
-//        pUserParams->BWc_rps = MATH_TWO_PI * (float32_t)100.0;
-//        pUserParams->BWdelta = (float32_t)10.0;
-//        pUserParams->Kctrl_Wb_p_kgm2 = (float32_t)3.0 *
-//                                       pUserParams->motor_numPolePairs *
-//                                       pUserParams->motor_ratedFlux_Wb /
-//                                       (float32_t) (2.0 * USER_M2_MOTOR_INERTIA_Kgm2);       // 3.0 * pUserParams->motor_numPolePairs * 0.1 / (2.0 * 0.00001);
-        // M2310PLN04K
+        // BOSCH BLDC-Motor F016L68035, 36 V-, 16,11 A
         pUserParams->BWc_rps = MATH_TWO_PI * (float32_t)400.0;
         pUserParams->BWdelta = (float32_t)10.0;
         pUserParams->Kctrl_Wb_p_kgm2 = (float32_t)3.0 *
                                        pUserParams->motor_numPolePairs *
                                        pUserParams->motor_ratedFlux_Wb /
-                                       (float32_t) (2.0 * USER_M1_MOTOR_INERTIA_Kgm2);
-        // nidec_fan
-        // pUserParams->BWc_rps = MATH_TWO_PI * (float32_t)4000.0;
-        // pUserParams->BWdelta = (float32_t)4.0;
-        // pUserParams->Kctrl_Wb_p_kgm2 = (float32_t)3.0 *
-        //                                 pUserParams->motor_numPolePairs *
-        //                                 pUserParams->motor_ratedFlux_Wb /
-        //                                 (float32_t) (2.0 * 0.000004802);   // 3.0 * pUserParams->motor_numPolePairs * 0.1 / (2.0 * 0.00001);
+                                       (float32_t) (2.0 * USER_M2_MOTOR_INERTIA_Kgm2);
     }
     else
     {
         pUserParams->flag_bypassMotorId = false;
+
         pUserParams->BWc_rps = MATH_TWO_PI * (float32_t)400.0;
         pUserParams->BWdelta = (float32_t)10.0;
         pUserParams->Kctrl_Wb_p_kgm2 = (float32_t)3.0 *

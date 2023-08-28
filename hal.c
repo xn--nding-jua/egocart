@@ -380,55 +380,28 @@ void HAL_setupADCs(HAL_Handle handle)
     ADC_setSOCPriority(obj->adcHandle[2], ADC_PRI_ALL_HIPRI);
     // delay to allow ADCs to power up
     SysCtl_delay(1000U);
+
     // configure the interrupt sources
-    // RC4
-    ADC_setInterruptSource(obj->adcHandle[2], ADC_INT_NUMBER1, ADC_SOC_NUMBER4);
-    // configure the SOCs for M1 on J1-J3/J2-J4
-    // ISENA - PGA5->A14->RA0
-    ADC_setupSOC(obj->adcHandle[0], ADC_SOC_NUMBER0, ADC_TRIGGER_EPWM6_SOCA,
-                 ADC_CH_ADCIN14, 14);
-    // ISENB - PGA3->C7->RC0
-    ADC_setupSOC(obj->adcHandle[2], ADC_SOC_NUMBER0, ADC_TRIGGER_EPWM6_SOCA,
-                 ADC_CH_ADCIN7, 14);
-    // ISENC - PGA1->B7->RB0
-    ADC_setupSOC(obj->adcHandle[1], ADC_SOC_NUMBER0, ADC_TRIGGER_EPWM6_SOCA,
-                 ADC_CH_ADCIN7, 14);
-    // VSENA - A5->RA1
-    ADC_setupSOC(obj->adcHandle[0], ADC_SOC_NUMBER1, ADC_TRIGGER_EPWM6_SOCA,
-                 ADC_CH_ADCIN5, 14);
-    // VSENB - B0->RB1
-    ADC_setupSOC(obj->adcHandle[1], ADC_SOC_NUMBER1, ADC_TRIGGER_EPWM6_SOCA,
-                 ADC_CH_ADCIN0, 14);
-    // VSENC - C2->RC1
-    ADC_setupSOC(obj->adcHandle[2], ADC_SOC_NUMBER1, ADC_TRIGGER_EPWM6_SOCA,
-                 ADC_CH_ADCIN2, 14);
-    // VSENVM - B1*/A10/C10->RB2. hvkit board has capacitor on Vbus feedback, so
-    // the sampling doesn't need to be very long to get an accurate value
-    ADC_setupSOC(obj->adcHandle[1], ADC_SOC_NUMBER2, ADC_TRIGGER_EPWM6_SOCA,
-                 ADC_CH_ADCIN1, 14);
-    // configure the SOCs for M1 on J5-J7/J6-J8
-    // ISENA - PGA2->B9->RB3
-    ADC_setupSOC(obj->adcHandle[1], ADC_SOC_NUMBER3, ADC_TRIGGER_EPWM1_SOCA,
-                 ADC_CH_ADCIN9, 14);
-    // ISENB - PGA1->A15->RA2
-    ADC_setupSOC(obj->adcHandle[0], ADC_SOC_NUMBER2, ADC_TRIGGER_EPWM1_SOCA,
-                 ADC_CH_ADCIN15, 14);
-    // ISENC - PGA4->C9->RC2
-    ADC_setupSOC(obj->adcHandle[2], ADC_SOC_NUMBER2, ADC_TRIGGER_EPWM1_SOCA,
-                 ADC_CH_ADCIN9, 14);
-    // VSENA - A6->RA3
-    ADC_setupSOC(obj->adcHandle[0], ADC_SOC_NUMBER3, ADC_TRIGGER_EPWM1_SOCA,
-                 ADC_CH_ADCIN6, 14);
-    // VSENB - A2/B6*->RB4
-    ADC_setupSOC(obj->adcHandle[1], ADC_SOC_NUMBER4, ADC_TRIGGER_EPWM1_SOCA,
-                 ADC_CH_ADCIN6, 14);
-    // VSENC - C14->RC3
-    ADC_setupSOC(obj->adcHandle[2], ADC_SOC_NUMBER3, ADC_TRIGGER_EPWM1_SOCA,
-                 ADC_CH_ADCIN14, 14);
-    // VSENVM - C1->RC4. hvkit board has capacitor on Vbus feedback, so
-    // the sampling doesn't need to be very long to get an accurate value
-    ADC_setupSOC(obj->adcHandle[2], ADC_SOC_NUMBER4, ADC_TRIGGER_EPWM1_SOCA,
-                 ADC_CH_ADCIN1, 14);
+    ADC_setInterruptSource(obj->adcHandle[2], ADC_INT_NUMBER1, ADC_SOC_NUMBER4); // trigger on last SOC_Number of last ADC-Group (here ADC_C SOC_NUMBER4)
+
+    // configure the SOCs for MTR1 on J1-J3/J2-J4
+    ADC_setupSOC(obj->adcHandle[0], ADC_SOC_NUMBER0, ADC_TRIGGER_EPWM6_SOCA, ADC_CH_ADCIN14, 14); // I_A = PGA5_OUT -> A14
+    ADC_setupSOC(obj->adcHandle[2], ADC_SOC_NUMBER0, ADC_TRIGGER_EPWM6_SOCA, ADC_CH_ADCIN7, 14); // I_B = PGA3_OUT -> B10/C7
+    ADC_setupSOC(obj->adcHandle[1], ADC_SOC_NUMBER0, ADC_TRIGGER_EPWM6_SOCA, ADC_CH_ADCIN7, 14); // I_C = PGA1_OUT -> A11/B7
+    ADC_setupSOC(obj->adcHandle[0], ADC_SOC_NUMBER1, ADC_TRIGGER_EPWM6_SOCA, ADC_CH_ADCIN5, 14); // V_A = A5
+    ADC_setupSOC(obj->adcHandle[1], ADC_SOC_NUMBER1, ADC_TRIGGER_EPWM6_SOCA, ADC_CH_ADCIN0, 14); // V_B = B0
+    ADC_setupSOC(obj->adcHandle[2], ADC_SOC_NUMBER1, ADC_TRIGGER_EPWM6_SOCA, ADC_CH_ADCIN2, 14); // V_C = C2
+    ADC_setupSOC(obj->adcHandle[1], ADC_SOC_NUMBER2, ADC_TRIGGER_EPWM6_SOCA, ADC_CH_ADCIN1, 14); // V_DC = B1. hvkit board has capacitor on Vbus feedback, so the sampling doesn't need to be very long to get an accurate value
+
+    // configure the SOCs for MTR2 on J5-J7/J6-J8
+    ADC_setupSOC(obj->adcHandle[1], ADC_SOC_NUMBER3, ADC_TRIGGER_EPWM1_SOCA, ADC_CH_ADCIN9, 14); // I_A = PGA2_OUT -> A12/B9
+    ADC_setupSOC(obj->adcHandle[0], ADC_SOC_NUMBER2, ADC_TRIGGER_EPWM1_SOCA, ADC_CH_ADCIN15, 14); // I_B = PGA6_OUT -> A15
+    ADC_setupSOC(obj->adcHandle[2], ADC_SOC_NUMBER2, ADC_TRIGGER_EPWM1_SOCA, ADC_CH_ADCIN9, 14); // I_C = PGA4_OUT -> B11/C9
+    ADC_setupSOC(obj->adcHandle[0], ADC_SOC_NUMBER3, ADC_TRIGGER_EPWM1_SOCA, ADC_CH_ADCIN6, 14); // V_A = A6
+    ADC_setupSOC(obj->adcHandle[1], ADC_SOC_NUMBER4, ADC_TRIGGER_EPWM1_SOCA, ADC_CH_ADCIN6, 14); // V_B = B6
+    ADC_setupSOC(obj->adcHandle[2], ADC_SOC_NUMBER3, ADC_TRIGGER_EPWM1_SOCA, ADC_CH_ADCIN14, 14); // V_C = C14
+    ADC_setupSOC(obj->adcHandle[2], ADC_SOC_NUMBER4, ADC_TRIGGER_EPWM1_SOCA, ADC_CH_ADCIN1, 14); // V_DC = C1. hvkit board has capacitor on Vbus feedback, so the sampling doesn't need to be very long to get an accurate value
+
     return;
 } // end of HAL_setupADCs() function
 
@@ -440,22 +413,14 @@ void HAL_runADCZeroOffsetCalibration(uint32_t base)
     // Adc Zero Offset Calibration
     // This is not typically necessary
     //      to achieve datasheet specified performance
-    ADC_setupSOC(base, ADC_SOC_NUMBER0, ADC_TRIGGER_SW_ONLY,
-                 ADC_CH_ADCIN13, 10);
-    ADC_setupSOC(base, ADC_SOC_NUMBER1, ADC_TRIGGER_SW_ONLY,
-                 ADC_CH_ADCIN13, 10);
-    ADC_setupSOC(base, ADC_SOC_NUMBER2, ADC_TRIGGER_SW_ONLY,
-                 ADC_CH_ADCIN13, 10);
-    ADC_setupSOC(base, ADC_SOC_NUMBER3, ADC_TRIGGER_SW_ONLY,
-                 ADC_CH_ADCIN13, 10);
-    ADC_setupSOC(base, ADC_SOC_NUMBER4, ADC_TRIGGER_SW_ONLY,
-                 ADC_CH_ADCIN13, 10);
-    ADC_setupSOC(base, ADC_SOC_NUMBER5, ADC_TRIGGER_SW_ONLY,
-                 ADC_CH_ADCIN13, 10);
-    ADC_setupSOC(base, ADC_SOC_NUMBER6, ADC_TRIGGER_SW_ONLY,
-                 ADC_CH_ADCIN13, 10);
-    ADC_setupSOC(base, ADC_SOC_NUMBER7, ADC_TRIGGER_SW_ONLY,
-                 ADC_CH_ADCIN13, 10);
+    ADC_setupSOC(base, ADC_SOC_NUMBER0, ADC_TRIGGER_SW_ONLY, ADC_CH_ADCIN13, 10);
+    ADC_setupSOC(base, ADC_SOC_NUMBER1, ADC_TRIGGER_SW_ONLY, ADC_CH_ADCIN13, 10);
+    ADC_setupSOC(base, ADC_SOC_NUMBER2, ADC_TRIGGER_SW_ONLY, ADC_CH_ADCIN13, 10);
+    ADC_setupSOC(base, ADC_SOC_NUMBER3, ADC_TRIGGER_SW_ONLY, ADC_CH_ADCIN13, 10);
+    ADC_setupSOC(base, ADC_SOC_NUMBER4, ADC_TRIGGER_SW_ONLY, ADC_CH_ADCIN13, 10);
+    ADC_setupSOC(base, ADC_SOC_NUMBER5, ADC_TRIGGER_SW_ONLY, ADC_CH_ADCIN13, 10);
+    ADC_setupSOC(base, ADC_SOC_NUMBER6, ADC_TRIGGER_SW_ONLY, ADC_CH_ADCIN13, 10);
+    ADC_setupSOC(base, ADC_SOC_NUMBER7, ADC_TRIGGER_SW_ONLY, ADC_CH_ADCIN13, 10);
     EALLOW;
     HWREGH(base + ADC_O_OFFTRIM) = 96;
     EDIS;
@@ -519,14 +484,15 @@ void HAL_setupPGAs(HAL_MTR_Handle handle, const HAL_MotorNum_e motorNum)
         pgaGain = MTR_1_PGA_GAIN;
     else if(motorNum == HAL_MTR_2)
         pgaGain = MTR_2_PGA_GAIN;
+
     // For Motor_1/Motor_2
     for(cnt=0;cnt<3;cnt++)
     {
-        // Set a gain of 12 to PGA1/3/5
+        // Set a gain of 12 to PGA1/3/5 (MTR1) or PGA2/4/6 (MTR2)
         PGA_setGain(obj->pgaHandle[cnt], (PGA_GainValue)pgaGain);
         // No filter resistor for output
         PGA_setFilterResistor(obj->pgaHandle[cnt], PGA_LOW_PASS_FILTER_DISABLED);
-        // Enable PGA1/3/5
+        // Enable PGA1/3/5 (MTR1) or PGA2/4/6 (MTR2)
         PGA_enable(obj->pgaHandle[cnt]);
     }
     return;

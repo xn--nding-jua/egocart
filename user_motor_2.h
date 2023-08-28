@@ -54,7 +54,7 @@ extern "C" {
 #define USER_M2_NOMINAL_DC_BUS_VOLTAGE_V         ((float32_t)(48.0))
 
 // Defines the maximum voltage at the AD converter
-#define USER_M2_ADC_FULL_SCALE_VOLTAGE_V         ((float32_t)(57.528))         
+#define USER_M2_ADC_FULL_SCALE_VOLTAGE_V         ((float32_t)(57.528))        
 // Full scale voltage of AD converter, not the current voltage
 
 // Defines the maximum current at the AD converter
@@ -65,9 +65,9 @@ extern "C" {
 #define USER_M2_VOLTAGE_FILTER_POLE_Hz           ((float32_t)(338.357))
 
 // ADC current offsets for A, B, and C phases
-#define USER_M2_IA_OFFSET_A    (-21.428)               // ~=0.5*USER_M2_ADC_FULL_SCALE_CURRENT_A
-#define USER_M2_IB_OFFSET_A    (-21.428)               // ~=0.5*USER_M2_ADC_FULL_SCALE_CURRENT_A
-#define USER_M2_IC_OFFSET_A    (-21.428)               // ~=0.5*USER_M2_ADC_FULL_SCALE_CURRENT_A
+#define USER_M2_IA_OFFSET_A    (-21.428)              // ~=0.5*USER_M2_ADC_FULL_SCALE_CURRENT_A
+#define USER_M2_IB_OFFSET_A    (-21.428)              // ~=0.5*USER_M2_ADC_FULL_SCALE_CURRENT_A
+#define USER_M2_IC_OFFSET_A    (-21.428)              // ~=0.5*USER_M2_ADC_FULL_SCALE_CURRENT_A
 
 // ADC voltage offsets for A, B, and C phases
 #define USER_M2_VA_OFFSET_V    (0.990514159)          // ~=1.0
@@ -97,8 +97,8 @@ extern "C" {
 #define USER_M2_NUM_VOLTAGE_SENSORS               (3)
 
 // Defines the Pulse Width Modulation (PWM) frequency, kHz
-#define USER_M2_PWM_FREQ_kHz          ((float32_t)(16.0))         
-// Maximum PWM Frequency
+#define USER_M2_PWM_FREQ_kHz          ((float32_t)(16.0))
+// Maximum PWM frequency
 //#define USER_M2_PWM_FREQ_kHz          ((float32_t)(15.0))
 //#define USER_M2_PWM_FREQ_kHz          ((float32_t)(10.0))
 
@@ -227,10 +227,8 @@ extern "C" {
 #define USER_M2_EST_BEMF_HF_SF                 ((float32_t)(0.50f))
 
 // A flag to bypass motor identification (1/0 : true/false)
-#define USER_M2_BYPASS_MOTOR_ID            USER_DISABLE_MOTOR_ID       
-// N/A
-//#define USER_M2_BYPASS_MOTOR_ID          USER_ENABLE_MOTOR_ID        
-// enable
+#define USER_M2_BYPASS_MOTOR_ID            1
+
 // Define the Kp gain for Field Weakening Control
 #define USER_M2_FWC_KP                 0.05
 // Define the Ki gain for Field Weakening Control
@@ -252,7 +250,7 @@ extern "C" {
 //#define USER_M2_MOTOR Anaheim_BLY341S_24V
 //#define USER_M2_MOTOR Traxxas_Velineon_380
 //#define USER_M2_MOTOR Traxxas_Velineon_3500
-#define USER_M2_MOTOR Teknic_M2310PLN04K
+//#define USER_M2_MOTOR Teknic_M2310PLN04K
 //#define USER_M2_MOTOR Teknic_2310S
 //#define USER_M2_MOTOR Anaheim_BLZ362S
 //#define USER_M2_MOTOR Anaheim_BLWS235D
@@ -265,6 +263,9 @@ extern "C" {
 //#define USER_M2_MOTOR Dayton_3N352C
 //#define USER_M2_MOTOR my_pm_motor_1
 //#define USER_M2_MOTOR my_aci_motor_2
+
+#define USER_M2_MOTOR Bosch_BLDC_F016L68035
+
 #if (USER_M2_MOTOR == Estun_EMJ_04APB22_A)
 #define USER_M2_MOTOR_TYPE                    MOTOR_TYPE_PM
 #define USER_M2_MOTOR_NUM_POLE_PAIRS         (4)
@@ -325,6 +326,20 @@ extern "C" {
 #define USER_M2_MOTOR_FREQ_HIGH_HZ           (200.0)         // Hz
 #define USER_M2_MOTOR_VOLT_MIN_V             (20.0)          // Volt
 #define USER_M2_MOTOR_VOLT_MAX_V             (200.0)         // Volt
+#elif (USER_M2_MOTOR == hawkins_ceiling_fan)
+#define USER_M2_MOTOR_TYPE                    MOTOR_TYPE_PM
+#define USER_M2_MOTOR_NUM_POLE_PAIRS         (6)
+#define USER_M2_MOTOR_Rr_Ohm                 (NULL)
+#define USER_M2_MOTOR_Rs_Ohm                 (34.98956)
+#define USER_M2_MOTOR_Ls_d_H                 (0.3858752)
+#define USER_M2_MOTOR_Ls_q_H                 (0.3858752)
+#define USER_M2_MOTOR_RATED_FLUX_VpHz        (0.9784898726)
+#define USER_M2_MOTOR_MAGNETIZING_CURRENT_A  (NULL)
+#define USER_M2_MOTOR_RES_EST_CURRENT_A      (0.1)
+#define USER_M2_MOTOR_IND_EST_CURRENT_A      (-0.1)
+#define USER_M2_MOTOR_MAX_CURRENT_A          (1.0)
+#define USER_M2_MOTOR_FLUX_EXC_FREQ_Hz       (10.0)
+#define USER_M2_MOTOR_NUM_ENC_SLOTS          (NULL)
 #elif (USER_M2_MOTOR == Teknic_M2310PLN04K)
 #define USER_M2_MOTOR_TYPE                   MOTOR_TYPE_PM
 #define USER_M2_MOTOR_NUM_POLE_PAIRS         (4)
@@ -616,34 +631,6 @@ extern "C" {
 #define USER_M2_MOTOR_MAX_CURRENT_A          (3.0)
 #define USER_M2_MOTOR_FLUX_EXC_FREQ_Hz       (5.0)
 #define USER_M2_MOTOR_NUM_ENC_SLOTS          (NULL)
-#elif (USER_M2_MOTOR == Toshiba_24SDSR41A_P)
-#define USER_M2_MOTOR_TYPE                   MOTOR_TYPE_INDUCTION
-#define USER_M2_MOTOR_NUM_POLE_PAIRS         (2)
-#define USER_M2_MOTOR_Rr_Ohm                 (0.55296)
-#define USER_M2_MOTOR_Rs_Ohm                 (1.025602)
-#define USER_M2_MOTOR_Ls_d_H                 (0.01404)
-#define USER_M2_MOTOR_Ls_q_H                 (0.01404)
-#define USER_M2_MOTOR_RATED_FLUX_VpHz        (0.8165*230.0/60.0)
-#define USER_M2_MOTOR_MAGNETIZING_CURRENT_A  (NULL)
-#define USER_M2_MOTOR_RES_EST_CURRENT_A      (0.5)
-#define USER_M2_MOTOR_IND_EST_CURRENT_A      (NULL)
-#define USER_M2_MOTOR_MAX_CURRENT_A          (6.0)
-#define USER_M2_MOTOR_FLUX_EXC_FREQ_Hz       (5.0)
-#define USER_M2_MOTOR_NUM_ENC_SLOTS          (NULL)
-#elif (USER_M2_MOTOR == Whirlpool_Washer)
-#define USER_M2_MOTOR_TYPE                   MOTOR_TYPE_INDUCTION
-#define USER_M2_MOTOR_NUM_POLE_PAIRS         (2)
-#define USER_M2_MOTOR_Rr_Ohm                 (NULL)
-#define USER_M2_MOTOR_Rs_Ohm                 (NULL)
-#define USER_M2_MOTOR_Ls_d_H                 (NULL)
-#define USER_M2_MOTOR_Ls_q_H                 (NULL)
-#define USER_M2_MOTOR_RATED_FLUX_VpHz        (0.8165*230.0/60.0)
-#define USER_M2_MOTOR_MAGNETIZING_CURRENT_A  (NULL)
-#define USER_M2_MOTOR_RES_EST_CURRENT_A      (0.5)
-#define USER_M2_MOTOR_IND_EST_CURRENT_A      (NULL)
-#define USER_M2_MOTOR_MAX_CURRENT_A          (5.0)
-#define USER_M2_MOTOR_FLUX_EXC_FREQ_Hz       (5.0)
-#define USER_M2_MOTOR_NUM_ENC_SLOTS          (NULL)
 //------------------------------------------------------------------
 #elif (USER_M2_MOTOR == my_pm_motor_1)
 #define USER_M2_MOTOR_TYPE                   MOTOR_TYPE_PM
@@ -689,6 +676,31 @@ extern "C" {
 #define USER_M2_MOTOR_FREQ_HIGH_HZ           (400.0)         // Hz
 #define USER_M2_MOTOR_VOLT_MIN_V             (4.0)           // Volt
 #define USER_M2_MOTOR_VOLT_MAX_V             (24.0)          // Volt
+
+#elif (USER_M2_MOTOR == Bosch_BLDC_F016L68035)
+#define USER_M2_MOTOR_TYPE                   MOTOR_TYPE_PM
+#define USER_M2_MOTOR_NUM_POLE_PAIRS         (4)
+#define USER_M2_MOTOR_Rr_Ohm                 (NULL)
+#define USER_M2_MOTOR_Rs_Ohm                 (0.041575864)
+#define USER_M2_MOTOR_Ls_d_H                 (0.000128439)
+#define USER_M2_MOTOR_Ls_q_H                 (0.000128439)
+#define USER_M2_MOTOR_RATED_FLUX_VpHz        (0.0863205)
+#define USER_M2_MOTOR_MAGNETIZING_CURRENT_A  (NULL)
+#define USER_M2_MOTOR_RES_EST_CURRENT_A      (2.5)           // 10% of I_rated. Increase, if motor is not ramping up during RampUp
+#define USER_M2_MOTOR_IND_EST_CURRENT_A      (-2.5)          // 10% of I_rated. Increase, if motor is not ramping up during RampUp
+#define USER_M2_MOTOR_MAX_CURRENT_A          (23.0)          // Torque-current = sqrt(2)*rated current
+#define USER_M2_MOTOR_FLUX_EXC_FREQ_Hz       (60.0)
+#define USER_M2_MOTOR_NUM_ENC_SLOTS          (NULL)
+#define USER_M2_MOTOR_INERTIA_Kgm2           (0.0002)
+#define USER_M2_MOTOR_RATED_VOLTAGE_V        (36.0)          // V
+#define USER_M2_MOTOR_RATED_SPEED_KRPM       (3.4)           // krpm
+#define USER_M2_MOTOR_MIN_MAX_HZ             (5.0)           // Hz
+#define USER_M2_MOTOR_FREQ_MAX_HZ            (600.0)         // Hz
+#define USER_M2_MOTOR_FREQ_LOW_HZ            (20.0)          // Hz
+#define USER_M2_MOTOR_FREQ_HIGH_HZ           (400.0)         // Hz
+#define USER_M2_MOTOR_VOLT_MIN_V             (5.0)           // Volt
+#define USER_M2_MOTOR_VOLT_MAX_V             (36.0)          // Volt
+
 #else
 #error No motor type specified
 #endif
@@ -699,43 +711,43 @@ extern "C" {
 // Defines the maximum current slope for Id trajectory during power warp mode
 #define USER_M2_MAX_CURRENT_DELTA_PW_A    (0.3 * USER_M2_MOTOR_RES_EST_CURRENT_A / USER_M2_ISR_FREQ_Hz)
 #ifndef USER_M2_MOTOR
-#error Motor type is not defined in user_motor2.h
+#error Motor type is not defined in user_motor1.h
 #endif
 #ifndef USER_M2_MOTOR_TYPE
-#error The motor type is not defined in user_motor2.h
+#error The motor type is not defined in user_motor1.h
 #endif
 #ifndef USER_M2_MOTOR_NUM_POLE_PAIRS
-#error Number of motor pole pairs is not defined in user_motor2.h
+#error Number of motor pole pairs is not defined in user_motor1.h
 #endif
 #ifndef USER_M2_MOTOR_Rr_Ohm
-#error The rotor resistance is not defined in user_motor2.h
+#error The rotor resistance is not defined in user_motor1.h
 #endif
 #ifndef USER_M2_MOTOR_Rs_Ohm
-#error The stator resistance is not defined in user_motor2.h
+#error The stator resistance is not defined in user_motor1.h
 #endif
 #ifndef USER_M2_MOTOR_Ls_d_H
-#error The direct stator inductance is not defined in user_motor2.h
+#error The direct stator inductance is not defined in user_motor1.h
 #endif
 #ifndef USER_M2_MOTOR_Ls_q_H
-#error The quadrature stator inductance is not defined in user_motor2.h
+#error The quadrature stator inductance is not defined in user_motor1.h
 #endif
 #ifndef USER_M2_MOTOR_RATED_FLUX_VpHz
-#error The rated flux of motor is not defined in user_motor2.h
+#error The rated flux of motor is not defined in user_motor1.h
 #endif
 #ifndef USER_M2_MOTOR_MAGNETIZING_CURRENT_A
-#error The magnetizing current is not defined in user_motor2.h
+#error The magnetizing current is not defined in user_motor1.h
 #endif
 #ifndef USER_M2_MOTOR_RES_EST_CURRENT_A
-#error The resistance estimation current is not defined in user_motor2.h
+#error The resistance estimation current is not defined in user_motor1.h
 #endif
 #ifndef USER_M2_MOTOR_IND_EST_CURRENT_A
-#error The inductance estimation current is not defined in user_motor2.h
+#error The inductance estimation current is not defined in user_motor1.h
 #endif
 #ifndef USER_M2_MOTOR_MAX_CURRENT_A
-#error The maximum current is not defined in user_motor2.h
+#error The maximum current is not defined in user_motor1.h
 #endif
 #ifndef USER_M2_MOTOR_FLUX_EXC_FREQ_Hz
-#error The flux excitation frequency is not defined in user_motor2.h
+#error The flux excitation frequency is not defined in user_motor1.h
 #endif
 #if ((USER_M2_NUM_CURRENT_SENSORS < 2) || (USER_M2_NUM_CURRENT_SENSORS > 3))
 #error The number of current sensors must be 2 or 3
@@ -762,4 +774,4 @@ extern "C" {
 //@}  
 // ingroup
 #endif 
-// end of USER_MOTOR2_H definition
+// end of USER_MOTOR1_H definition

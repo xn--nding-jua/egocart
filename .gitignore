@@ -2,3 +2,6 @@
 /Release/
 /Tests/
 /Democode/
+*.dcu
+*.~*
+*.exe

@@ -205,7 +205,11 @@ void main(void)
         motorVars[ctrlNum].boardKit = BOARD_BSXL8320RS_REVA;
         #endif  // _BOOSTXL_8320RS_REVA_
 
-        userParams[ctrlNum].flag_bypassMotorId = true;
+        if (ctrlNum==HAL_MTR_1) {
+            userParams[HAL_MTR_1].flag_bypassMotorId = (USER_M1_BYPASS_MOTOR_ID == 1);
+        }else{
+            userParams[HAL_MTR_2].flag_bypassMotorId = (USER_M2_BYPASS_MOTOR_ID == 1);
+        }
 
         // initialize the user parameters
         USER_setParams_priv(&userParams[ctrlNum]);
@@ -216,11 +220,6 @@ void main(void)
 
     // set the driver parameters
     HAL_setParams(halHandle);
-
-    #ifdef COMM_SCI
-        sciTx_msg("Dual-Motor-Controller for BLDC\n\r\0");
-        sciTx_msg("v0.0.1, https://github.com/xn--nding-jua/egocart\n\r\0");
-    #endif
 
     // enable LEDs on both BOOSTXL-DRV8320RS
     HAL_turnLEDOn(halHandle, HAL_GPIO_LEDBOOSTXL1); // UserLED on BOOSTXL #1
@@ -236,67 +235,50 @@ void main(void)
         HAL_MTR_setParams(halMtrHandle[ctrlNum], ctrlNum);
 
         // initialize the Clarke modules
-        clarkeHandle_I[ctrlNum] = CLARKE_init(&clarke_I[ctrlNum],
-                                               sizeof(clarke_I[ctrlNum]));
-        clarkeHandle_V[ctrlNum] = CLARKE_init(&clarke_V[ctrlNum],
-                                               sizeof(clarke_V[ctrlNum]));
+        clarkeHandle_I[ctrlNum] = CLARKE_init(&clarke_I[ctrlNum], sizeof(clarke_I[ctrlNum]));
+        clarkeHandle_V[ctrlNum] = CLARKE_init(&clarke_V[ctrlNum], sizeof(clarke_V[ctrlNum]));
 
         // set the Clarke parameters
-        setupClarke_I(clarkeHandle_I[ctrlNum],
-                      userParams[ctrlNum].numCurrentSensors);
-        setupClarke_V(clarkeHandle_V[ctrlNum],
-                      userParams[ctrlNum].numVoltageSensors);
+        setupClarke_I(clarkeHandle_I[ctrlNum], userParams[ctrlNum].numCurrentSensors);
+        setupClarke_V(clarkeHandle_V[ctrlNum], userParams[ctrlNum].numVoltageSensors);
 
         // initialize the estimator
         estHandle[ctrlNum] = EST_initEst(ctrlNum);
 
         // set the default estimator parameters
         EST_setParams(estHandle[ctrlNum],&userParams[ctrlNum]);
-        EST_setFlag_enableForceAngle(estHandle[ctrlNum],
-                                     motorVars[ctrlNum].flagEnableForceAngle);
-        EST_setFlag_enableRsRecalc(estHandle[ctrlNum],
-                                   motorVars[ctrlNum].flagEnableRsRecalc);
+        EST_setFlag_enableForceAngle(estHandle[ctrlNum], motorVars[ctrlNum].flagEnableForceAngle);
+        EST_setFlag_enableRsRecalc(estHandle[ctrlNum], motorVars[ctrlNum].flagEnableRsRecalc);
 
         if(ctrlNum == HAL_MTR_1)
         {
             // set the scale factor for high frequency motor
-            EST_setOneOverFluxGain_sf(estHandle[ctrlNum],
-                           &userParams[ctrlNum], USER_M1_EST_FLUX_HF_SF);
-            EST_setFreqLFP_sf(estHandle[ctrlNum],
-                           &userParams[ctrlNum], USER_M1_EST_FREQ_HF_SF);
-            EST_setBemf_sf(estHandle[ctrlNum],
-                           &userParams[ctrlNum], USER_M1_EST_BEMF_HF_SF);
+            EST_setOneOverFluxGain_sf(estHandle[ctrlNum], &userParams[ctrlNum], USER_M1_EST_FLUX_HF_SF);
+            EST_setFreqLFP_sf(estHandle[ctrlNum], &userParams[ctrlNum], USER_M1_EST_FREQ_HF_SF);
+            EST_setBemf_sf(estHandle[ctrlNum], &userParams[ctrlNum], USER_M1_EST_BEMF_HF_SF);
         }
         else if(ctrlNum == HAL_MTR_2)
         {
             // set the scale factor for high frequency motor
-            EST_setOneOverFluxGain_sf(estHandle[ctrlNum],
-                           &userParams[ctrlNum], USER_M2_EST_FLUX_HF_SF);
-            EST_setFreqLFP_sf(estHandle[ctrlNum],
-                           &userParams[ctrlNum], USER_M2_EST_FREQ_HF_SF);
-            EST_setBemf_sf(estHandle[ctrlNum],
-                           &userParams[ctrlNum], USER_M2_EST_BEMF_HF_SF);
+            EST_setOneOverFluxGain_sf(estHandle[ctrlNum], &userParams[ctrlNum], USER_M2_EST_FLUX_HF_SF);
+            EST_setFreqLFP_sf(estHandle[ctrlNum], &userParams[ctrlNum], USER_M2_EST_FREQ_HF_SF);
+            EST_setBemf_sf(estHandle[ctrlNum], &userParams[ctrlNum], USER_M2_EST_BEMF_HF_SF);
         }
 
 
         // if motor is an induction motor, configure default state of PowerWarp
         if(userParams[ctrlNum].motor_type == MOTOR_TYPE_INDUCTION)
         {
-            EST_setFlag_enablePowerWarp(estHandle[ctrlNum],
-                                        motorVars[ctrlNum].flagEnablePowerWarp);
-            EST_setFlag_bypassLockRotor(estHandle[ctrlNum],
-                                        motorVars[ctrlNum].flagBypassLockRotor);
+            EST_setFlag_enablePowerWarp(estHandle[ctrlNum], motorVars[ctrlNum].flagEnablePowerWarp);
+            EST_setFlag_bypassLockRotor(estHandle[ctrlNum], motorVars[ctrlNum].flagBypassLockRotor);
         }
 
         // initialize the inverse Park module
-        iparkHandle_V[ctrlNum] = IPARK_init(&ipark_V[ctrlNum],
-                                             sizeof(ipark_V[ctrlNum]));
+        iparkHandle_V[ctrlNum] = IPARK_init(&ipark_V[ctrlNum], sizeof(ipark_V[ctrlNum]));
 
         // initialize the Park module
-        parkHandle_I[ctrlNum] = PARK_init(&park_I[ctrlNum],
-                                           sizeof(park_I[ctrlNum]));
-        parkHandle_V[ctrlNum] = PARK_init(&park_V[ctrlNum],
-                                           sizeof(park_V[ctrlNum]));
+        parkHandle_I[ctrlNum] = PARK_init(&park_I[ctrlNum], sizeof(park_I[ctrlNum]));
+        parkHandle_V[ctrlNum] = PARK_init(&park_V[ctrlNum], sizeof(park_V[ctrlNum]));
 
         // initialize the PI controllers
         piHandle_Id[ctrlNum]  = PI_init(&pi_Id[ctrlNum], sizeof(pi_Id[ctrlNum]));
@@ -308,64 +290,47 @@ void main(void)
         setupControllers(ctrlNum);
 
         // initialize the space vector generator module
-        svgenHandle[ctrlNum] = SVGEN_init(&svgen[ctrlNum],
-                                           sizeof(svgen[ctrlNum]));
+        svgenHandle[ctrlNum] = SVGEN_init(&svgen[ctrlNum], sizeof(svgen[ctrlNum]));
 
         // initialize the speed reference trajectory
-        trajHandle_spd[ctrlNum] = TRAJ_init(&traj_spd[ctrlNum],
-                                             sizeof(traj_spd[ctrlNum]));
+        trajHandle_spd[ctrlNum] = TRAJ_init(&traj_spd[ctrlNum], sizeof(traj_spd[ctrlNum]));
 
         // initialize the Id reference trajectory
-        trajHandle_Id[ctrlNum] = TRAJ_init(&traj_Id[ctrlNum],
-                                            sizeof(traj_Id[ctrlNum]));
+        trajHandle_Id[ctrlNum] = TRAJ_init(&traj_Id[ctrlNum], sizeof(traj_Id[ctrlNum]));
 
         // initialize the Iq reference trajectory
-        trajHandle_Iq[ctrlNum] = TRAJ_init(&traj_Iq[ctrlNum],
-                                            sizeof(traj_Iq[ctrlNum]));
+        trajHandle_Iq[ctrlNum] = TRAJ_init(&traj_Iq[ctrlNum], sizeof(traj_Iq[ctrlNum]));
 
         // initialize the fwc reference trajectory
-        trajHandle_fwc[ctrlNum] = TRAJ_init(&traj_fwc[ctrlNum],
-                                             sizeof(traj_fwc[ctrlNum]));
+        trajHandle_fwc[ctrlNum] = TRAJ_init(&traj_fwc[ctrlNum], sizeof(traj_fwc[ctrlNum]));
 
         // configure the speed reference trajectory (Hz)
         TRAJ_setTargetValue(trajHandle_spd[ctrlNum], 0.0);
         TRAJ_setIntValue(trajHandle_spd[ctrlNum], 0.0);
-        TRAJ_setMinValue(trajHandle_spd[ctrlNum],
-                         -userParams[ctrlNum].maxFrequency_Hz);         // Maximum Frequency
-        TRAJ_setMaxValue(trajHandle_spd[ctrlNum],
-                         userParams[ctrlNum].maxFrequency_Hz);          // Maximum Frequency
-        TRAJ_setMaxDelta(trajHandle_spd[ctrlNum],
-                         (userParams[ctrlNum].maxAccel_Hzps / userParams[ctrlNum].ctrlFreq_Hz));
+        TRAJ_setMinValue(trajHandle_spd[ctrlNum], -userParams[ctrlNum].maxFrequency_Hz);         // Maximum Frequency
+        TRAJ_setMaxValue(trajHandle_spd[ctrlNum], userParams[ctrlNum].maxFrequency_Hz);          // Maximum Frequency
+        TRAJ_setMaxDelta(trajHandle_spd[ctrlNum], (userParams[ctrlNum].maxAccel_Hzps / userParams[ctrlNum].ctrlFreq_Hz));
 
         // configure the Id reference trajectory
         TRAJ_setTargetValue(trajHandle_Id[ctrlNum], 0.0);
         TRAJ_setIntValue(trajHandle_Id[ctrlNum], 0.0);
-        TRAJ_setMinValue(trajHandle_Id[ctrlNum],
-                         -userParams[ctrlNum].maxCurrent_A);
-        TRAJ_setMaxValue(trajHandle_Id[ctrlNum],
-                         userParams[ctrlNum].maxCurrent_A);
-        TRAJ_setMaxDelta(trajHandle_Id[ctrlNum],
-                         (userParams[ctrlNum].maxCurrent_resEst_A / userParams[ctrlNum].ctrlFreq_Hz));
+        TRAJ_setMinValue(trajHandle_Id[ctrlNum], -userParams[ctrlNum].maxCurrent_A);
+        TRAJ_setMaxValue(trajHandle_Id[ctrlNum], userParams[ctrlNum].maxCurrent_A);
+        TRAJ_setMaxDelta(trajHandle_Id[ctrlNum], (userParams[ctrlNum].maxCurrent_resEst_A / userParams[ctrlNum].ctrlFreq_Hz));
 
         // configure the Iq reference trajectory
         TRAJ_setTargetValue(trajHandle_Iq[ctrlNum], 0.0);
         TRAJ_setIntValue(trajHandle_Iq[ctrlNum], 0.0);
-        TRAJ_setMinValue(trajHandle_Iq[ctrlNum],
-                         -userParams[ctrlNum].maxCurrent_A);
-        TRAJ_setMaxValue(trajHandle_Iq[ctrlNum],
-                         userParams[ctrlNum].maxCurrent_A);
-        TRAJ_setMaxDelta(trajHandle_Iq[ctrlNum],
-                         (userParams[ctrlNum].maxCurrent_resEst_A / userParams[ctrlNum].ctrlFreq_Hz));
+        TRAJ_setMinValue(trajHandle_Iq[ctrlNum],-userParams[ctrlNum].maxCurrent_A);
+        TRAJ_setMaxValue(trajHandle_Iq[ctrlNum],userParams[ctrlNum].maxCurrent_A);
+        TRAJ_setMaxDelta(trajHandle_Iq[ctrlNum], (userParams[ctrlNum].maxCurrent_resEst_A / userParams[ctrlNum].ctrlFreq_Hz));
 
         // configure the fwc reference trajectory
         TRAJ_setTargetValue(trajHandle_fwc[ctrlNum], 0.0);
         TRAJ_setIntValue(trajHandle_fwc[ctrlNum], 0.0);
-        TRAJ_setMinValue(trajHandle_fwc[ctrlNum],
-                         -userParams[ctrlNum].maxCurrent_A);
-        TRAJ_setMaxValue(trajHandle_fwc[ctrlNum],
-                         userParams[ctrlNum].maxCurrent_A);
-        TRAJ_setMaxDelta(trajHandle_fwc[ctrlNum],
-                         (userParams[ctrlNum].maxCurrent_resEst_A / userParams[ctrlNum].ctrlFreq_Hz));
+        TRAJ_setMinValue(trajHandle_fwc[ctrlNum], -userParams[ctrlNum].maxCurrent_A);
+        TRAJ_setMaxValue(trajHandle_fwc[ctrlNum], userParams[ctrlNum].maxCurrent_A);
+        TRAJ_setMaxDelta(trajHandle_fwc[ctrlNum], (userParams[ctrlNum].maxCurrent_resEst_A / userParams[ctrlNum].ctrlFreq_Hz));
 
         // initialize and configure offsets using filters
         {
@@ -377,8 +342,7 @@ void main(void)
             // For Current offset calibration filter
             for(filterCnt = 0; filterCnt<USER_M1_NUM_CURRENT_SENSORS; filterCnt++)
             {
-                filterHandle_I[ctrlNum][filterCnt] = FILTER_FO_init(&filter_I[ctrlNum][filterCnt],
-                                                         sizeof(filter_I[ctrlNum][filterCnt]));
+                filterHandle_I[ctrlNum][filterCnt] = FILTER_FO_init(&filter_I[ctrlNum][filterCnt], sizeof(filter_I[ctrlNum][filterCnt]));
 
                 FILTER_FO_setDenCoeffs(filterHandle_I[ctrlNum][filterCnt], a1);
                 FILTER_FO_setNumCoeffs(filterHandle_I[ctrlNum][filterCnt], b0, b1);
@@ -391,8 +355,7 @@ void main(void)
             // For Voltage offset calibration filter
             for(filterCnt=0; filterCnt<USER_M1_NUM_VOLTAGE_SENSORS; filterCnt++)
             {
-                filterHandle_V[ctrlNum][filterCnt] = FILTER_FO_init(&filter_V[ctrlNum][filterCnt],
-                                                         sizeof(filter_V[ctrlNum][filterCnt]));
+                filterHandle_V[ctrlNum][filterCnt] = FILTER_FO_init(&filter_V[ctrlNum][filterCnt], sizeof(filter_V[ctrlNum][filterCnt]));
 
                 FILTER_FO_setDenCoeffs(filterHandle_V[ctrlNum][filterCnt], a1);
                 FILTER_FO_setNumCoeffs(filterHandle_V[ctrlNum][filterCnt], b0, b1);
@@ -542,16 +505,27 @@ void main(void)
             HAL_disablePWM(halMtrHandle[HAL_MTR_2]);
         }else{
             // system is enabled
+			
             if(systemVars.flagEnableSynControl == true)
             {
-                motorVars[HAL_MTR_1].flagEnableRunAndIdentify = systemVars.flagEnableRun;
-                motorVars[HAL_MTR_1].speedRef_Hz = systemVars.speedSet_Hz;
-                motorVars[HAL_MTR_1].accelerationMax_Hzps = systemVars.accelerationMaxSet_Hzps;
+                // synchron control of both motors
+                motorVars[HAL_MTR_1].flagEnableRunAndIdentify = systemVars.flagEnableSystem;
+                motorVars[HAL_MTR_1].speedRef_Hz = systemVars.M1_speedSet_Hz;
+                motorVars[HAL_MTR_1].accelerationMax_Hzps = systemVars.M1_accelerationMaxSet_Hzps;
 
-                motorVars[HAL_MTR_2].flagEnableRunAndIdentify = systemVars.flagEnableRun;
-                motorVars[HAL_MTR_2].speedRef_Hz = systemVars.speedSet_Hz;
-                motorVars[HAL_MTR_2].accelerationMax_Hzps = systemVars.accelerationMaxSet_Hzps;
-            }
+                motorVars[HAL_MTR_2].flagEnableRunAndIdentify = systemVars.flagEnableSystem;
+                motorVars[HAL_MTR_2].speedRef_Hz = systemVars.M1_speedSet_Hz;
+                motorVars[HAL_MTR_2].accelerationMax_Hzps = systemVars.M1_accelerationMaxSet_Hzps;
+            }else{
+                // individual control of both motors
+                motorVars[HAL_MTR_1].flagEnableRunAndIdentify = systemVars.flagEnableSystem;
+                motorVars[HAL_MTR_1].speedRef_Hz = systemVars.M1_speedSet_Hz;
+                motorVars[HAL_MTR_1].accelerationMax_Hzps = systemVars.M1_accelerationMaxSet_Hzps;
+
+                motorVars[HAL_MTR_2].flagEnableRunAndIdentify = systemVars.flagEnableSystem;
+                motorVars[HAL_MTR_2].speedRef_Hz = systemVars.M2_speedSet_Hz;
+                motorVars[HAL_MTR_2].accelerationMax_Hzps = systemVars.M2_accelerationMaxSet_Hzps;
+			}
 
             //
             // 1ms time base
@@ -596,29 +570,23 @@ void main(void)
 
                     for(cmpssCnt=0; cmpssCnt<HAL_NUM_CMPSS_CURRENT; cmpssCnt++)
                     {
-                        HAL_setCMPSSDACValueHigh(halMtrHandle[ctrlNum],
-                                                 cmpssCnt, motorVars[ctrlNum].dacValH);
+                        HAL_setCMPSSDACValueHigh(halMtrHandle[ctrlNum], cmpssCnt, motorVars[ctrlNum].dacValH);
 
-                        HAL_setCMPSSDACValueLow(halMtrHandle[ctrlNum],
-                                                cmpssCnt, motorVars[ctrlNum].dacValL);
+                        HAL_setCMPSSDACValueLow(halMtrHandle[ctrlNum], cmpssCnt, motorVars[ctrlNum].dacValL);
                     }
                 }
 
                 // enable or disable force angle
-                EST_setFlag_enableForceAngle(estHandle[ctrlNum],
-                                             motorVars[ctrlNum].flagEnableForceAngle);
+                EST_setFlag_enableForceAngle(estHandle[ctrlNum], motorVars[ctrlNum].flagEnableForceAngle);
 
-                EST_setFlag_enableRsRecalc(estHandle[ctrlNum],
-                                           motorVars[ctrlNum].flagEnableRsRecalc);
+                EST_setFlag_enableRsRecalc(estHandle[ctrlNum], motorVars[ctrlNum].flagEnableRsRecalc);
 
-                EST_setFlag_enableRsOnLine(estHandle[ctrlNum],
-                                           motorVars[ctrlNum].flagEnableRsOnLine);
+                EST_setFlag_enableRsOnLine(estHandle[ctrlNum], motorVars[ctrlNum].flagEnableRsOnLine);
 
                 // enable or disable bypassLockRotor flag
                 if(userParams[ctrlNum].motor_type == MOTOR_TYPE_INDUCTION)
                 {
-                    EST_setFlag_bypassLockRotor(estHandle[ctrlNum],
-                                                motorVars[ctrlNum].flagBypassLockRotor);
+                    EST_setFlag_bypassLockRotor(estHandle[ctrlNum], motorVars[ctrlNum].flagBypassLockRotor);
                 }
 
                 if(HAL_getPwmEnableStatus(halMtrHandle[ctrlNum]) == true)
@@ -630,8 +598,7 @@ void main(void)
                     }
                 }
 
-                motorVars[ctrlNum].faultUse.all = motorVars[ctrlNum].faultNow.all &
-                                                    motorVars[ctrlNum].faultMask.all;
+                motorVars[ctrlNum].faultUse.all = motorVars[ctrlNum].faultNow.all & motorVars[ctrlNum].faultMask.all;
 
                 // Had some faults to stop the motor
                 if(motorVars[ctrlNum].faultUse.all != 0)
@@ -640,8 +607,7 @@ void main(void)
                     motorVars[ctrlNum].flagRunIdentAndOnLine = false;
                 }
 
-                if((motorVars[ctrlNum].flagRunIdentAndOnLine == true) &&
-                        (motorVars[ctrlNum].flagEnableOffsetCalc == false))
+                if((motorVars[ctrlNum].flagRunIdentAndOnLine == true) && (motorVars[ctrlNum].flagEnableOffsetCalc == false))
                 {
                     if(HAL_getPwmEnableStatus(halMtrHandle[ctrlNum]) == false)
                     {
@@ -656,8 +622,7 @@ void main(void)
                     }
 
                     TRAJ_setTargetValue(trajHandle_spd[ctrlNum], motorVars[ctrlNum].speedRef_Hz);
-                    TRAJ_setMaxDelta(trajHandle_spd[ctrlNum],
-                                     (motorVars[ctrlNum].accelerationMax_Hzps / USER_M1_ISR_FREQ_Hz));
+                    TRAJ_setMaxDelta(trajHandle_spd[ctrlNum], (motorVars[ctrlNum].accelerationMax_Hzps / USER_M1_ISR_FREQ_Hz));
                 }
                 else if(motorVars[ctrlNum].flagEnableOffsetCalc == false)
                 {
@@ -790,23 +755,18 @@ __interrupt void mainISR(void)
     for(isrNum = HAL_MTR_1; isrNum <= HAL_MTR_2; isrNum++)
     {
         // read the ADC data with offsets
-        HAL_readADCDataWithOffsets(halHandle, halMtrHandle[isrNum],
-                                   &adcData[isrNum], isrNum);
+        HAL_readADCDataWithOffsets(halHandle, halMtrHandle[isrNum], &adcData[isrNum], isrNum);
 
         // calculate Vbus scale factor to scale offsets with Vbus
-        motorVars[isrNum].Vbus_sf = adcData[isrNum].dcBus_V *
-                                       motorVars[isrNum].offset_invVbus_invV;
+        motorVars[isrNum].Vbus_sf = adcData[isrNum].dcBus_V * motorVars[isrNum].offset_invVbus_invV;
 
         // remove offsets
         adcData[isrNum].I_A.value[0] -= motorVars[isrNum].offsets_I_A.value[0];
         adcData[isrNum].I_A.value[1] -= motorVars[isrNum].offsets_I_A.value[1];
         adcData[isrNum].I_A.value[2] -= motorVars[isrNum].offsets_I_A.value[2];
-        adcData[isrNum].V_V.value[0] -= motorVars[isrNum].offsets_V_V.value[0] *
-                                                     motorVars[isrNum].Vbus_sf;
-        adcData[isrNum].V_V.value[1] -= motorVars[isrNum].offsets_V_V.value[1] *
-                                                     motorVars[isrNum].Vbus_sf;
-        adcData[isrNum].V_V.value[2] -= motorVars[isrNum].offsets_V_V.value[2] *
-                                                     motorVars[isrNum].Vbus_sf;
+        adcData[isrNum].V_V.value[0] -= motorVars[isrNum].offsets_V_V.value[0] * motorVars[isrNum].Vbus_sf;
+        adcData[isrNum].V_V.value[1] -= motorVars[isrNum].offsets_V_V.value[1] * motorVars[isrNum].Vbus_sf;
+        adcData[isrNum].V_V.value[2] -= motorVars[isrNum].offsets_V_V.value[2] * motorVars[isrNum].Vbus_sf;
     }
 
     // Dual Motor Control
@@ -820,12 +780,10 @@ __interrupt void mainISR(void)
             MATH_Vec2 phasor;
 
             // run Clarke transform on current
-            CLARKE_run(clarkeHandle_I[isrNum],
-                       &adcData[isrNum].I_A, &(estInputData[isrNum].Iab_A));
+            CLARKE_run(clarkeHandle_I[isrNum], &adcData[isrNum].I_A, &(estInputData[isrNum].Iab_A));
 
             // run Clarke transform on voltage
-            CLARKE_run(clarkeHandle_V[isrNum],
-                       &adcData[isrNum].V_V, &(estInputData[isrNum].Vab_V));
+            CLARKE_run(clarkeHandle_V[isrNum], &adcData[isrNum].V_V, &(estInputData[isrNum].Vab_V));
 
             counterTrajSpeed[isrNum]++;
 
@@ -861,9 +819,7 @@ __interrupt void mainISR(void)
             }
 
             // run the estimator
-            EST_run(estHandle[isrNum],
-                    &estInputData[isrNum],
-                    &estOutputData[isrNum]);
+            EST_run(estHandle[isrNum], &estInputData[isrNum], &estOutputData[isrNum]);
 
             // get Idq, reutilizing a Park transform used inside the estimator.
             // This is optional, user's Park works as well
@@ -895,11 +851,9 @@ __interrupt void mainISR(void)
                     fwcPhasor[isrNum].value[0] = sinf(motorVars[isrNum].angleCurrent_rad);
                     fwcPhasor[isrNum].value[1] = cosf(motorVars[isrNum].angleCurrent_rad);
 
-                    Idq_ref_A[isrNum].value[0] = motorVars[isrNum].IsRef_A *
-                                                    fwcPhasor[isrNum].value[0];
+                    Idq_ref_A[isrNum].value[0] = motorVars[isrNum].IsRef_A * fwcPhasor[isrNum].value[0];
 
-                    Idq_ref_A[isrNum].value[1] = motorVars[isrNum].IsRef_A *
-                                                    fwcPhasor[isrNum].value[1];
+                    Idq_ref_A[isrNum].value[1] = motorVars[isrNum].IsRef_A * fwcPhasor[isrNum].value[1];
                 }
             }
             else
@@ -908,14 +862,11 @@ __interrupt void mainISR(void)
             }
 
             // update Id reference for Rs OnLine
-            EST_updateId_ref_A(estHandle[isrNum],
-                               (float32_t *)&(Idq_ref_A[isrNum].value[0]));
+            EST_updateId_ref_A(estHandle[isrNum], (float32_t *)&(Idq_ref_A[isrNum].value[0]));
 
             // Maximum voltage output
-            userParams[isrNum].maxVsMag_V = userParams[isrNum].maxVsMag_pu *
-                                                 adcData[isrNum].dcBus_V;
-            PI_setMinMax(piHandle_Id[isrNum],
-                         -userParams[isrNum].maxVsMag_V, userParams[isrNum].maxVsMag_V);
+            userParams[isrNum].maxVsMag_V = userParams[isrNum].maxVsMag_pu * adcData[isrNum].dcBus_V;
+            PI_setMinMax(piHandle_Id[isrNum], -userParams[isrNum].maxVsMag_V, userParams[isrNum].maxVsMag_V);
 
             // run the Id controller
             PI_run_series(piHandle_Id[isrNum],
@@ -927,11 +878,9 @@ __interrupt void mainISR(void)
             // calculate Iq controller limits, and run Iq controller using fast RTS
             // function, callable assembly
             #ifdef __TMS320C28XX_TMU__
-            outMax_V = sqrt((userParams[isrNum].maxVsMag_V * userParams[isrNum].maxVsMag_V) -
-                            (Vdq_out_V[isrNum].value[0] * Vdq_out_V[isrNum].value[0]));
+            outMax_V = sqrt((userParams[isrNum].maxVsMag_V * userParams[isrNum].maxVsMag_V) - (Vdq_out_V[isrNum].value[0] * Vdq_out_V[isrNum].value[0]));
             #else
-            outMax_V = sqrt_fastRTS((userParams[isrNum].maxVsMag_V * userParams[isrNum].maxVsMag_V) -
-                                    (Vdq_out_V[isrNum].value[0] * Vdq_out_V[isrNum].value[0]));
+            outMax_V = sqrt_fastRTS((userParams[isrNum].maxVsMag_V * userParams[isrNum].maxVsMag_V) - (Vdq_out_V[isrNum].value[0] * Vdq_out_V[isrNum].value[0]));
             #endif
 
             PI_setMinMax(piHandle_Iq[isrNum], -outMax_V, outMax_V);
@@ -942,11 +891,9 @@ __interrupt void mainISR(void)
                           &(Vdq_out_V[isrNum].value[1]));
 
             // compute angle with delay compensation
-            angleDelta_rad[isrNum] = userParams[isrNum].angleDelayed_sf_sec *
-                             estOutputData[isrNum].fm_lp_rps;
+            angleDelta_rad[isrNum] = userParams[isrNum].angleDelayed_sf_sec * estOutputData[isrNum].fm_lp_rps;
 
-            angleEst_rad[isrNum] = MATH_incrAngle(estOutputData[isrNum].angle_rad,
-                                          angleDelta_rad[isrNum]);
+            angleEst_rad[isrNum] = MATH_incrAngle(estOutputData[isrNum].angle_rad, angleDelta_rad[isrNum]);
 
             angleFoc_rad[isrNum] = angleEst_rad[isrNum];
 
@@ -958,16 +905,13 @@ __interrupt void mainISR(void)
             IPARK_setPhasor(iparkHandle_V[isrNum], &phasor);
 
             // run the inverse Park module
-            IPARK_run(iparkHandle_V[isrNum],
-                      &Vdq_out_V[isrNum], &Vab_out_V[isrNum]);
+            IPARK_run(iparkHandle_V[isrNum], &Vdq_out_V[isrNum], &Vab_out_V[isrNum]);
 
             // setup the space vector generator (SVGEN) module
-            SVGEN_setup(svgenHandle[isrNum],
-                        estOutputData[isrNum].oneOverDcBus_invV);
+            SVGEN_setup(svgenHandle[isrNum], estOutputData[isrNum].oneOverDcBus_invV);
 
             // run the space vector generator (SVGEN) module
-            SVGEN_run(svgenHandle[isrNum],
-                      &Vab_out_V[isrNum], &(pwmData[isrNum].Vabc_pu));
+            SVGEN_run(svgenHandle[isrNum], &Vab_out_V[isrNum], &(pwmData[isrNum].Vabc_pu));
         }
         else if(motorVars[isrNum].flagEnableOffsetCalc == true)
         {
@@ -1026,8 +970,7 @@ void runOffsetsCalculation(const uint16_t motorNum)
             motorVars[motorNum].offsets_I_A.value[filterCnt] = 0.0;
 
             // run current offset estimation
-            FILTER_FO_run(filterHandle_I[motorNum][filterCnt],
-                          adcData[motorNum].I_A.value[filterCnt]);
+            FILTER_FO_run(filterHandle_I[motorNum][filterCnt], adcData[motorNum].I_A.value[filterCnt]);
         }
 
         for(filterCnt=0; filterCnt< USER_M1_NUM_VOLTAGE_SENSORS; filterCnt++)
@@ -1048,8 +991,7 @@ void runOffsetsCalculation(const uint16_t motorNum)
             for(filterCnt=0; filterCnt<USER_M1_NUM_CURRENT_SENSORS; filterCnt++)
             {
                 // get calculated current offsets from filter
-                motorVars[motorNum].offsets_I_A.value[filterCnt] =
-                        FILTER_FO_get_y1(filterHandle_I[motorNum][filterCnt]);
+                motorVars[motorNum].offsets_I_A.value[filterCnt] = FILTER_FO_get_y1(filterHandle_I[motorNum][filterCnt]);
 
 
                 // clear current filters
@@ -1061,8 +1003,7 @@ void runOffsetsCalculation(const uint16_t motorNum)
             for(filterCnt = 0; filterCnt < USER_M1_NUM_VOLTAGE_SENSORS; filterCnt++)
             {
                 // get calculated voltage offsets from filter
-                motorVars[motorNum].offsets_V_V.value[filterCnt] =
-                        FILTER_FO_get_y1(filterHandle_V[motorNum][filterCnt]);
+                motorVars[motorNum].offsets_V_V.value[filterCnt] = FILTER_FO_get_y1(filterHandle_V[motorNum][filterCnt]);
 
                 // clear voltage filters
                 FILTER_FO_setInitialConditions(filterHandle_V[motorNum][filterCnt],
@@ -1083,64 +1024,90 @@ void runOffsetsCalculation(const uint16_t motorNum)
 
 #ifdef COMM_SCI
     void sciProcessCmd() {
+        /*
+        expected Rx-frame
+        AxMvvvvE with "A" and "E" as start- and end-byte, "M" to select motor, "x" as command-byte and "vvvv" as 4 value-bytes
+
+        supported commands:
+        x = S = Set speed as ASCII: "S" = "ASMyyyyE" with yyyy = 0 ... 9999 in ASCII
+        x = R = Set reverse speed as ASCII: "R" = "ARMyyyyE" with yyyy = 0 ... 9999 in ASCII
+        x = A = Set acceleration as ASCII: "A" = "AAMyyyyE" with yyyy = 0 ... 9999 in ASCII
+        x = F = Set system-flag ("F" = "AF_000vE"): v=0=disabled, =1=MTR1/MTR2 individual, =3=MTR2=MTR1
+        x = V = Receive data about the detected motor
+        x = I = Receive information-string of the controller
+
+
+        x = s = Set speed as 32-bit-float: "a" = "AaMyyyyE" with yyyy = 4x 8-bit values of a float32
+        x = a = Set acceleration as 32-bit-float: "a" = "AaMyyyyE" with yyyy = 4x 8-bit values of a float32
+        */
+
+
         if (sciCmdReady) {
-            //data_32b value;
-            //int i=0;
-            //for (; i < sizeof(float); ++i)
-            //    value.u8[i] = sciCmdBuf[];
-
-            // sciCmdBuf[0...sciBufPos]
-            // AS0000E\r\n\0  ->   AS0050E\r\n\0   ->   AS2000E\r\n\0
-
-            // test for "A" and "E"
-            if (((sciCmdBuf[0] & 0x00FF) == 65) && ((sciCmdBuf[6] & 0x00FF) == 69)) {
+            // test for "A" and "E": AxMvvvvE
+            if (((sciCmdBuf[0] & 0x00FF) == 65) && ((sciCmdBuf[7] & 0x00FF) == 69)) {
                 // message seems to be consistent
 
                 // check for desired command
                 if (sciCmdBuf[1]==83){
-                    // received command "S" = "ASxxxxE"
-                    float32_t newSetpoint = (((sciCmdBuf[2]-48)*1000) + ((sciCmdBuf[3]-48)*100) + ((sciCmdBuf[4]-48)*10) + (sciCmdBuf[5]-48));
+                    // received command "S" = "ASMxxxxE"
+                    uint16_t motor = ((sciCmdBuf[2] & 0x00FF)-48);
+                    float32_t newSetpoint = ((((sciCmdBuf[3] & 0x00FF)-48)* (float32_t)1000) + (((sciCmdBuf[4] & 0x00FF)-48)* (float32_t)100) + (((sciCmdBuf[5] & 0x00FF)-48)* (float32_t)10) + ((sciCmdBuf[6] & 0x00FF)-48));
                     if ((newSetpoint >= 0) && (newSetpoint < MOTOR_MAX_SPEED)){
-                        systemVars.speedSet_Hz = (newSetpoint/(60.0f * userParams[0].motor_numPolePairs)); // convert rpm to Hz
+                        if (motor==HAL_MTR_1) {
+                            systemVars.M1_speedSet_Hz = (newSetpoint/(60.0f / userParams[motor].motor_numPolePairs)); // convert rpm to Hz
+                        }else{
+                            systemVars.M2_speedSet_Hz = (newSetpoint/(60.0f / userParams[motor].motor_numPolePairs)); // convert rpm to Hz
+                        }
+                        sciTx_msg("RxD: new setPoint for speed\n\r\0");
+                    }else{
+                        sciTx_msg("ERROR: Value out of spec!\n\r\0");
+                    }
+                }else if (sciCmdBuf[1]==82){
+                    // received command "R" = "ARMxxxxE"
+                    uint16_t motor = ((sciCmdBuf[2] & 0x00FF)-48);
+                    float32_t newSetpoint = -((((sciCmdBuf[3] & 0x00FF)-48)* (float32_t)1000) + (((sciCmdBuf[4] & 0x00FF)-48)* (float32_t)100) + (((sciCmdBuf[5] & 0x00FF)-48)* (float32_t)10) + ((sciCmdBuf[6] & 0x00FF)-48));
+                    if ((newSetpoint <= 0) && (newSetpoint > -MOTOR_MAX_SPEED)){
+                        if (motor==HAL_MTR_1) {
+                            systemVars.M1_speedSet_Hz = (newSetpoint/(60.0f / userParams[motor].motor_numPolePairs)); // convert rpm to Hz
+                        }else{
+                            systemVars.M2_speedSet_Hz = (newSetpoint/(60.0f / userParams[motor].motor_numPolePairs)); // convert rpm to Hz
+                        }
                         sciTx_msg("RxD: new setPoint for speed\n\r\0");
                     }else{
                         sciTx_msg("ERROR: Value out of spec!\n\r\0");
                     }
                 }else if (sciCmdBuf[1]==65){
-                    // received command "A" = "AAxxxxE"
-                    float32_t newSetpoint = (((sciCmdBuf[2]-48)*1000) + ((sciCmdBuf[3]-48)*100) + ((sciCmdBuf[4]-48)*10) + (sciCmdBuf[5]-48));
+                    // received command "A" = "AAMxxxxE"
+                    uint16_t motor = ((sciCmdBuf[2] & 0x00FF)-48);
+                    float32_t newSetpoint = (((sciCmdBuf[3]-48)*1000) + ((sciCmdBuf[4]-48)*100) + ((sciCmdBuf[5]-48)*10) + (sciCmdBuf[6]-48));
                     if ((newSetpoint >= 0) && (newSetpoint < MOTOR_MAX_ACCEL)){
-                        systemVars.accelerationMaxSet_Hzps = (newSetpoint/(60.0f * userParams[0].motor_numPolePairs)); // convert rpm/s to Hz/s
+                        if (motor==HAL_MTR_1) {
+                            systemVars.M1_accelerationMaxSet_Hzps = (newSetpoint/(60.0f / userParams[motor].motor_numPolePairs)); // convert rpm/s to Hz/s
+                        }else{
+                            systemVars.M2_accelerationMaxSet_Hzps = (newSetpoint/(60.0f / userParams[motor].motor_numPolePairs)); // convert rpm/s to Hz/s
+                        }
                         sciTx_msg("RxD: new setPoint for acceleration\n\r\0");
                     }else{
                         sciTx_msg("ERROR: Value out of spec!\n\r\0");
                     }
                 }else if (sciCmdBuf[1]==70){
-                    // received command "F" = "AF000xE"
-                    systemVars.flagEnableSystem = ((sciCmdBuf[5] - 48) & 0x0001);
-                    systemVars.flagEnableSynControl = ((sciCmdBuf[5] - 48) & 0x0002);
-                    systemVars.flagEnableRun = ((sciCmdBuf[5] - 48) & 0x0004);
+                    // received command "F" = "AFM000xE"
+                    systemVars.flagEnableSystem = ((sciCmdBuf[6] - 48) & 0x0001);
+                    systemVars.flagEnableSynControl = ((sciCmdBuf[6] - 48) & 0x0002);
                     sciTx_msg("RxD: Set flag\n\r\0");
                 }else if (sciCmdBuf[1]==86){
-                    // received command V = "AV000xE"
-                    uint16_t motor = (sciCmdBuf[5]-48);
-                    if ((motor == 0) || (motor == 1))
+                    // received command V = "AVM0000E"
+                    uint16_t motor = ((sciCmdBuf[2] & 0x00FF)-48);
+                    if ((motor == HAL_MTR_1) || (motor == HAL_MTR_2))
                     {
                         sciTx_uint8(65); // "A"
 
                         sciTx_uint16(motorVars[motor].ctrlState);
                         sciTx_uint16(motorVars[motor].estState);
 
-                        sciTx_float(motorVars[motor].VdcBus_V);
-                        sciTx_float(motorVars[motor].power_W);
-                        sciTx_float(motorVars[motor].motorCtrlMode);
-                        sciTx_float(motorVars[motor].speed_krpm);
-                        sciTx_float(motorVars[motor].torque_Nm);
-                        sciTx_float(motorVars[motor].angleCurrent_rad);
-
-                        sciTx_float(motorVars[motor].Rs_Ohm);
-                        sciTx_float(motorVars[motor].Ls_d_H);
-                        sciTx_float(motorVars[motor].flux_Wb);
+                        sciTx_float(motorVars[motor].VdcBus_V); // DC-bus voltage
+                        sciTx_float(motorVars[motor].speed_krpm); // speed in 1/min
+                        sciTx_float(motorVars[motor].torque_Nm); // torque in Nm
 
                         sciTx_uint8(69); // "E"
                         sciTx_uint8(13); // "CR"
@@ -1148,10 +1115,42 @@ void runOffsetsCalculation(const uint16_t motorNum)
                     }else{
                         sciTx_msg("ERROR: Value out of spec!\n\r\0");
                     }
+/*
+                }else if (sciCmdBuf[1]==115) {
+                    // received command "s" = "AsMxxxxE"
+                    data32bit.data_u8[0] = sciCmdBuf[5];
+                    data32bit.data_u8[1] = sciCmdBuf[4];
+                    data32bit.data_u8[2] = sciCmdBuf[3];
+                    data32bit.data_u8[3] = sciCmdBuf[2];
+
+                    float32_t newSetpoint = data32bit.data_f;
+                    if ((newSetpoint >= 0) && (newSetpoint < MOTOR_MAX_SPEED)){
+                        systemVars.M1_speedSet_Hz = (newSetpoint/(60.0f / userParams[0].motor_numPolePairs)); // convert rpm to Hz
+                        sciTx_msg("RxD: new setPoint for speed\n\r\0");
+                    }else{
+                        sciTx_msg("ERROR: Value out of spec!\n\r\0");
+                    }
+                }else if (sciCmdBuf[1]==97) {
+                    // received command "a" = "AaMxxxxE"
+                    data32bit.data_u8[0] = sciCmdBuf[5];
+                    data32bit.data_u8[1] = sciCmdBuf[4];
+                    data32bit.data_u8[2] = sciCmdBuf[3];
+                    data32bit.data_u8[3] = sciCmdBuf[2];
+
+                    float32_t newSetpoint = data32bit.data_f;
+                    if ((newSetpoint >= 0) && (newSetpoint < MOTOR_MAX_ACCEL)){
+                        systemVars.M1_accelerationMaxSet_Hzps = (newSetpoint/(60.0f / userParams[0].motor_numPolePairs)); // convert rpm/s to Hz/s
+                        sciTx_msg("RxD: new setPoint for acceleration\n\r\0");
+                    }else{
+                        sciTx_msg("ERROR: Value out of spec!\n\r\0");
+                    }
+*/
                 }else if (sciCmdBuf[1]==73){
-                    // received command I = "AIxxxxE"
+                    // received command I = "AIMxxxxE"
                     sciTx_msg("Dual-Motor-Controller for BLDC\n\r\0");
-                    sciTx_msg("v0.0.1, https://github.com/xn--nding-jua/egocart\n\r\0");
+                    sciTx_msg(VERSION_STRING);
+                    sciTx_msg(" built on " __DATE__ " " __TIME__ "\n\r\0");
+                    sciTx_msg("Infos: https://github.com/xn--nding-jua/egocart\n\r\0");
                 }
             }else{
                 // error in frame

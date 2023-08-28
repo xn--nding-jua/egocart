@@ -92,8 +92,6 @@
 
 #define LED_BLINK_FREQ_Hz           (1.0)     // 1Hz
 
-#define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
-
 #define OVER_VOLTAGE_BITS           0x0001    // DC Bus Over Voltage Fault
 #define UNDER_VOLTAGE_BITS          0x0002    // DC Bus Under Voltage Fault
 #define MOTOR_OVER_TEMPER_BITS      0x0004    // Motor over temperature Fault
@@ -162,6 +160,35 @@
                                   + MOTOR_OVER_LOAD_BITS                       \
                                   + CONTROLLER_ERROR_BITS                      \
                                   + MASK_ALL_FAULT_BITS
+
+//
+// macro for checking if bit is set in variable
+//
+#define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
+
+//
+// typedefs for 16- and 32-bit data
+//
+typedef union
+{
+   uint16_t data_u16;
+   int16_t data_i16;
+   uint8_t data_u8[2];
+   int8_t data_i8[2];
+}uData16bit;
+uData16bit data16bit;
+
+typedef union
+{
+   float data_f;
+   uint32_t data_u32;
+   int32_t data_i32;
+   uint16_t data_u16[2];
+   int16_t data_i16[2];
+   uint8_t data_u8[4];
+   int8_t data_i8[4];
+}uData32bit;
+uData32bit data32bit;
 
 //
 // typedefs for the fault
@@ -561,18 +588,20 @@ typedef struct _MOTOR_Vars_t_
 #define SYSTEM_VARS_INIT  { \
         false, \
         false, \
-        false, \
-        20.0, \
-        10.0 \
+        0.0, \
+        50.0, \
+        0.0, \
+        50.0 \
 }
 
 typedef struct _SYSTEM_Vars_t_
 {
     bool flagEnableSystem;
     bool flagEnableSynControl;
-    bool flagEnableRun;
-    float32_t speedSet_Hz;
-    float32_t accelerationMaxSet_Hzps;
+    float32_t M1_speedSet_Hz;
+    float32_t M1_accelerationMaxSet_Hzps;
+    float32_t M2_speedSet_Hz;
+    float32_t M2_accelerationMaxSet_Hzps;
 }SYSTEM_Vars_t;
 
 extern volatile SYSTEM_Vars_t systemVars;

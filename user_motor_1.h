@@ -65,9 +65,9 @@ extern "C" {
 #define USER_M1_VOLTAGE_FILTER_POLE_Hz           ((float32_t)(338.357))
 
 // ADC current offsets for A, B, and C phases
-#define USER_M1_IA_OFFSET_A    (-21.428)    // ~=0.5*USER_M1_ADC_FULL_SCALE_CURRENT_A
-#define USER_M1_IB_OFFSET_A    (-21.428)    // ~=0.5*USER_M1_ADC_FULL_SCALE_CURRENT_A
-#define USER_M1_IC_OFFSET_A    (-21.428)    // ~=0.5*USER_M1_ADC_FULL_SCALE_CURRENT_A
+#define USER_M1_IA_OFFSET_A    (-21.428)              // ~=0.5*USER_M1_ADC_FULL_SCALE_CURRENT_A
+#define USER_M1_IB_OFFSET_A    (-21.428)              // ~=0.5*USER_M1_ADC_FULL_SCALE_CURRENT_A
+#define USER_M1_IC_OFFSET_A    (-21.428)              // ~=0.5*USER_M1_ADC_FULL_SCALE_CURRENT_A
 
 // ADC voltage offsets for A, B, and C phases
 #define USER_M1_VA_OFFSET_V    (0.990514159)          // ~=1.0
@@ -81,7 +81,7 @@ extern "C" {
 #define USER_M1_MAX_NEGATIVE_ID_REF_CURRENT_A    ((float32_t)(-2.0))
 
 // Defines the number of pwm clock ticks per isr clock tick
-//!        Note: Valid values are 1, 2 or 3 only
+//        Note: Valid values are 1, 2 or 3 only
 #define USER_M1_NUM_PWM_TICKS_PER_ISR_TICK        (1)
 
 // Defines the number of ISR clock ticks per current controller clock tick
@@ -97,7 +97,7 @@ extern "C" {
 #define USER_M1_NUM_VOLTAGE_SENSORS               (3)
 
 // Defines the Pulse Width Modulation (PWM) frequency, kHz
-#define USER_M1_PWM_FREQ_kHz          ((float32_t)(16.0))         
+#define USER_M1_PWM_FREQ_kHz          ((float32_t)(16.0))
 // Maximum PWM frequency
 //#define USER_M1_PWM_FREQ_kHz          ((float32_t)(15.0))
 //#define USER_M1_PWM_FREQ_kHz          ((float32_t)(10.0))
@@ -156,7 +156,7 @@ extern "C" {
 #define USER_M1_MAX_VS_MAG_PU              (0.5)
 
 // Defines the reference Vs magnitude in per units allowed
-//! \      Set the value equal from 0.5 to 0.95 of the maximum Vs magnitude
+//      Set the value equal from 0.5 to 0.95 of the maximum Vs magnitude
 #define USER_M1_VS_REF_MAG_PU             (float32_t)(0.8) * USER_MAX_VS_MAG_PU)
 
 // Defines the R/L excitation frequency, Hz
@@ -227,37 +227,30 @@ extern "C" {
 #define USER_M1_EST_BEMF_HF_SF                 ((float32_t)(0.50f))
 
 // A flag to bypass motor identification (1/0 : true/false)
-#define USER_M1_BYPASS_MOTOR_ID            USER_DISABLE_MOTOR_ID       
-// N/A
-//#define USER_M1_BYPASS_MOTOR_ID          USER_ENABLE_MOTOR_ID        
-// enable
-//! brief Define the Kp gain for Field Weakening Control
+#define USER_M1_BYPASS_MOTOR_ID            1
+
+// Define the Kp gain for Field Weakening Control
 #define USER_M1_FWC_KP                 0.05
-//! brief Define the Ki gain for Field Weakening Control
+// Define the Ki gain for Field Weakening Control
 #define USER_M1_FWC_KI                 0.0002
-//! brief Define the maximum current vector angle for Field Weakening Control
-#define USER_M1_FWC_MAX_ANGLE          -75.0                        
-// degree
-#define USER_M1_FWC_MAX_ANGLE_RAD      USER_M1_FWC_MAX_ANGLE/180.0  
-// degree->rad
-//! brief Define the minimum current vector angle for Field Weakening Control
-#define USER_M1_FWC_MIN_ANGLE          0.0                          
-// degree
-#define USER_M1_FWC_MIN_ANGLE_RAD      USER_M1_FWC_MIN_ANGLE/180.0  
-// degree->rad
+// Define the maximum current vector angle for Field Weakening Control
+#define USER_M1_FWC_MAX_ANGLE          -75.0                        // degree
+#define USER_M1_FWC_MAX_ANGLE_RAD      USER_M1_FWC_MAX_ANGLE/180.0  // degree->rad
+// Define the minimum current vector angle for Field Weakening Control
+#define USER_M1_FWC_MIN_ANGLE          0.0                          // degree
+#define USER_M1_FWC_MIN_ANGLE_RAD      USER_M1_FWC_MIN_ANGLE/180.0  // degree->rad
 //============================================================================================
 
 // Motor defines
 //#define USER_M1_MOTOR Estun_EMJ_04APB22_A
 //#define USER_M1_MOTOR Estun_EMJ_04APB22_B
 //#define USER_M1_MOTOR Regal_Beloit_5SME39DL0756
-//#define USER_M1_MOTOR Teknic_M2311SLN02K
 //#define USER_M1_MOTOR Anaheim_BLY172S_24V
 //#define USER_M1_MOTOR Anaheim_BLY341S_48V
 //#define USER_M1_MOTOR Anaheim_BLY341S_24V
 //#define USER_M1_MOTOR Traxxas_Velineon_380
 //#define USER_M1_MOTOR Traxxas_Velineon_3500
-#define USER_M1_MOTOR Teknic_M2310PLN04K
+//#define USER_M1_MOTOR Teknic_M2310PLN04K
 //#define USER_M1_MOTOR Teknic_2310S
 //#define USER_M1_MOTOR Anaheim_BLZ362S
 //#define USER_M1_MOTOR Anaheim_BLWS235D
@@ -270,6 +263,9 @@ extern "C" {
 //#define USER_M1_MOTOR Dayton_3N352C
 //#define USER_M1_MOTOR my_pm_motor_1
 //#define USER_M1_MOTOR my_aci_motor_2
+
+#define USER_M1_MOTOR Bosch_BLDC_F016L68035
+
 #if (USER_M1_MOTOR == Estun_EMJ_04APB22_A)
 #define USER_M1_MOTOR_TYPE                    MOTOR_TYPE_PM
 #define USER_M1_MOTOR_NUM_POLE_PAIRS         (4)
@@ -680,6 +676,31 @@ extern "C" {
 #define USER_M1_MOTOR_FREQ_HIGH_HZ           (400.0)         // Hz
 #define USER_M1_MOTOR_VOLT_MIN_V             (4.0)           // Volt
 #define USER_M1_MOTOR_VOLT_MAX_V             (24.0)          // Volt
+
+#elif (USER_M1_MOTOR == Bosch_BLDC_F016L68035)
+#define USER_M1_MOTOR_TYPE                   MOTOR_TYPE_PM
+#define USER_M1_MOTOR_NUM_POLE_PAIRS         (4)
+#define USER_M1_MOTOR_Rr_Ohm                 (NULL)
+#define USER_M1_MOTOR_Rs_Ohm                 (0.041575864)
+#define USER_M1_MOTOR_Ls_d_H                 (0.000128439)
+#define USER_M1_MOTOR_Ls_q_H                 (0.000128439)
+#define USER_M1_MOTOR_RATED_FLUX_VpHz        (0.0863205)
+#define USER_M1_MOTOR_MAGNETIZING_CURRENT_A  (NULL)
+#define USER_M1_MOTOR_RES_EST_CURRENT_A      (2.5)           // 10% of I_rated. Increase, if motor is not ramping up during RampUp
+#define USER_M1_MOTOR_IND_EST_CURRENT_A      (-2.5)          // 10% of I_rated. Increase, if motor is not ramping up during RampUp
+#define USER_M1_MOTOR_MAX_CURRENT_A          (23.0)          // Torque-current = sqrt(2)*rated current
+#define USER_M1_MOTOR_FLUX_EXC_FREQ_Hz       (60.0)
+#define USER_M1_MOTOR_NUM_ENC_SLOTS          (NULL)
+#define USER_M1_MOTOR_INERTIA_Kgm2           (0.0002)
+#define USER_M1_MOTOR_RATED_VOLTAGE_V        (36.0)          // V
+#define USER_M1_MOTOR_RATED_SPEED_KRPM       (3.4)           // krpm
+#define USER_M1_MOTOR_MIN_MAX_HZ             (5.0)           // Hz
+#define USER_M1_MOTOR_FREQ_MAX_HZ            (600.0)         // Hz
+#define USER_M1_MOTOR_FREQ_LOW_HZ            (20.0)          // Hz
+#define USER_M1_MOTOR_FREQ_HIGH_HZ           (400.0)         // Hz
+#define USER_M1_MOTOR_VOLT_MIN_V             (5.0)           // Volt
+#define USER_M1_MOTOR_VOLT_MAX_V             (36.0)          // Volt
+
 #else
 #error No motor type specified
 #endif

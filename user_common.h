@@ -51,12 +51,6 @@ extern "C" {
 // the defines
 // Defines the system clock frequency, MHz
 #define USER_SYSTEM_FREQ_MHz       ((float32_t)(100.0))
-
-// A flag to bypass motor identification (1/0 : true/false)
-#define USER_BYPASS_MOTOR_ID       (1)          // No motor parameters identification
-//#define USER_BYPASS_MOTOR_ID        (0)           // Do motor parameters identification
-#define USER_ENABLE_MOTOR_ID        0
-#define USER_DISABLE_MOTOR_ID       1
 //============================================================================================
 // Motor defines
 //************** Motor Parameters **************
@@ -77,6 +71,7 @@ extern "C" {
 #define Anaheim_BLWS235D            142
 #define tekin_redline_4600KV        143
 #define low_voltage_ceiling_fan     144
+#define Bosch_BLDC_F016L68035       145
 
 // ACIM motors
 #define Marathon_5K33GN2A           200
