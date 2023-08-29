@@ -15,16 +15,18 @@ The C2000 microcontroller receives its set-points either via SCI/UART based on a
 * [ ] touchscreen headup-display using a RaspberryPi Zero. Up to now there is a Windows-GUI programmed in Delphi 7 that can be used to control the hardware
 
 ## Commands
-* AS0+xxxxE / AS1+xxxxE = Set forward-speed for motor 1/2 (with xxxx between 0rpm and 9999rpm)
-* AS0-xxxxE / AS1-xxxxE = Set reverse-speed for motor 1/2 (with xxxx between 0rpm and 9999rpm)
-* AA0+xxxxE / AA1+xxxxE = Set maximum acceleration for motor 1/2 (with xxxx between 0rpm/s and 9999rpm/s)
-* AT0+0000E / AT1+0000E = switch to speed-controlled-mode for motor 1/2 (all reference-values [current or speed] will be set to zero)
-* AT0+0001E / AT1+0001E = switch to current-(torque)-controlled-mode for motor 1/2 (all reference-values [current or speed] will be set to zero)
-* AQ0+xxxxE / AQ1+xxxxE = set forward Iq-current (in current-(torque)-controlled-mode) (with xxxx between 0 and 9999, which represents 0...Imax)
-* AQ0-xxxxE / AQ1-xxxxE = set reverse Iq-current (in current-(torque)-controlled-mode) (with xxxx between 0 and 9999, which represents 0...Imax)
-* AF0+0003E / AF0+0000E = Start/Stop system (for both motors same command)
-* AV0+0000E / AV1+0000E = Read data for motor 1/2
-* AI0+0000E = Get general information about the control
+* AS0+xxxxCE / AS1+xxxxCE = Set forward-speed for motor 1/2 (with xxxx between 0rpm and 9999rpm)
+* AS0-xxxxCE / AS1-xxxxCE = Set reverse-speed for motor 1/2 (with xxxx between 0rpm and 9999rpm)
+* AA0+xxxxCE / AA1+xxxxCE = Set maximum acceleration for motor 1/2 (with xxxx between 0rpm/s and 9999rpm/s)
+* AT0+0000CE / AT1+0000CE = switch to speed-controlled-mode for motor 1/2 (all reference-values [current or speed] will be set to zero)
+* AT0+0001CE / AT1+0001CE = switch to current-(torque)-controlled-mode for motor 1/2 (all reference-values [current or speed] will be set to zero)
+* AQ0+xxxxCE / AQ1+xxxxCE = set forward Iq-current (in current-(torque)-controlled-mode) (with xxxx between 0 and 9999, which represents 0...Imax)
+* AQ0-xxxxCE / AQ1-xxxxCE = set reverse Iq-current (in current-(torque)-controlled-mode) (with xxxx between 0 and 9999, which represents 0...Imax)
+* AF0+0003CE / AF0+0000CE = Start/Stop system (for both motors same command)
+* AV0+0000CE / AV1+0000CE = Read data for motor 1/2
+* AI0+0000CE = Get general information about the control
+
+"C" = ErrorCheckByte = sum of all bytes between "A" and "C" divided by number of bytes. For example: AV0+0000CE -> C = trunc(sum("V0+0000")/7)
 
 ## Instructions to use this project
 * Download and install TI CodeComposerStudio from https://www.ti.com/tool/download/CCSTUDIO (v12.4 has been used for compiling)
