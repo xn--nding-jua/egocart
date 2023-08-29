@@ -188,19 +188,25 @@ end;
 
 function Tmainform.SendCommand(command: string):boolean;
 var
-  i:integer;
+  i, command_sum:integer;
+  tx_data:string;
+  ErrorCheckByte:byte;
 begin
   if not comport.Connected then
     Button1.Click;
 
   comport.FlushBuffers(true, true);
-  
+
+  command_sum:=0;
   for i := 0 to length(command)-1 do
   begin
-    comport.SendChar(command[i+1]); // strings are starting at 1 in delphi
+    command_sum:=command_sum+byte(command[i]);
   end;
-  comport.SendByte(13); // CR
-  comport.SendByte(10); // LF
+  ErrorCheckByte:=trunc(command_sum/length(command));
+
+  tx_data:='A' + command + char(ErrorCheckByte) + 'E' + char(13) + char(10);
+
+  comport.SendDataEx(PChar(tx_data), length(tx_data), 1000);
 end;
 
 procedure Tmainform.Button1Click(Sender: TObject);
@@ -223,7 +229,7 @@ end;
 
 procedure Tmainform.Butto3Click(Sender: TObject);
 begin
-  SendCommand('AF0+0001E'); // 1 2
+  SendCommand('F0+0001'); // 1 2
   memo1.Lines.Add(ReceiveAnswer);
 end;
 
@@ -233,7 +239,7 @@ var
   i:integer;
   w:word;
 begin
-  SendCommand('AV0+0000E');
+  SendCommand('V0+0000');
   if ReceiveData then
   begin
     // expecting (1 + 2*2 + 3*4 + 3)=20 bytes
@@ -297,7 +303,7 @@ begin
 
   sleep(100);
 
-  SendCommand('AV1+0000E');
+  SendCommand('V1+0000');
   if ReceiveData then
   begin
     // expecting (1 + 2*2 + 3*4 + 3)=20 bytes
@@ -368,7 +374,7 @@ end;
 
 procedure Tmainform.Button4Click(Sender: TObject);
 begin
-  SendCommand('AF0+0000E');
+  SendCommand('F0+0000');
   memo1.Lines.Add(ReceiveAnswer);
 end;
 
@@ -389,9 +395,9 @@ begin
     valuestr:='0'+valuestr;
 
   if reverse then
-    SendCommand('AS0-' + valuestr + 'E')
+    SendCommand('S0-' + valuestr)
   else
-    SendCommand('AS0+' + valuestr + 'E');
+    SendCommand('S0+' + valuestr);
 
   speedlbl.Caption:= inttostr(speedbar.Position) + ' rpm';
 
@@ -412,7 +418,7 @@ begin
 
   acclbl.Caption:= inttostr(accbar.Position) + ' rpm/s';
 
-  SendCommand('AA0+' + valuestr + 'E');
+  SendCommand('A0+' + valuestr);
   memo1.Lines.Add(ReceiveAnswer);
 end;
 
@@ -443,9 +449,9 @@ begin
     valuestr:='0'+valuestr;
 
   if reverse then
-    SendCommand('AS1-' + valuestr + 'E')
+    SendCommand('S1-' + valuestr)
   else
-    SendCommand('AS1+' + valuestr + 'E');
+    SendCommand('S1+' + valuestr);
 
   label37.Caption:= inttostr(trackbar1.Position) + ' rpm';
 
@@ -466,7 +472,7 @@ begin
 
   label38.Caption:= inttostr(trackbar2.Position) + ' rpm/s';
 
-  SendCommand('AA1+' + valuestr + 'E');
+  SendCommand('A1+' + valuestr);
   memo1.Lines.Add(ReceiveAnswer);
 end;
 
@@ -482,31 +488,31 @@ end;
 
 procedure Tmainform.Button8Click(Sender: TObject);
 begin
-  SendCommand('AF0+0003E'); // 1 2
+  SendCommand('F0+0003'); // 1 2
   memo1.Lines.Add(ReceiveAnswer);
 end;
 
 procedure Tmainform.Button9Click(Sender: TObject);
 begin
-  SendCommand('AT0+0000E');
+  SendCommand('T0+0000');
   memo1.Lines.Add(ReceiveAnswer);
 end;
 
 procedure Tmainform.Button10Click(Sender: TObject);
 begin
-  SendCommand('AT1+0000E');
+  SendCommand('T1+0000');
   memo1.Lines.Add(ReceiveAnswer);
 end;
 
 procedure Tmainform.Button12Click(Sender: TObject);
 begin
-  SendCommand('AT1+0001E');
+  SendCommand('T1+0001');
   memo1.Lines.Add(ReceiveAnswer);
 end;
 
 procedure Tmainform.Button11Click(Sender: TObject);
 begin
-  SendCommand('AT0+0001E');
+  SendCommand('T0+0001');
   memo1.Lines.Add(ReceiveAnswer);
 end;
 
@@ -527,9 +533,9 @@ begin
     valuestr:='0'+valuestr;
 
   if reverse then
-    SendCommand('AQ0-' + valuestr + 'E')
+    SendCommand('Q0-' + valuestr)
   else
-    SendCommand('AQ0+' + valuestr + 'E');
+    SendCommand('Q0+' + valuestr);
 
   memo1.Lines.Add(ReceiveAnswer);
 end;
@@ -561,9 +567,9 @@ begin
     valuestr:='0'+valuestr;
 
   if reverse then
-    SendCommand('AQ1-' + valuestr + 'E')
+    SendCommand('Q1-' + valuestr)
   else
-    SendCommand('AQ1+' + valuestr + 'E');
+    SendCommand('Q1+' + valuestr);
 
   memo1.Lines.Add(ReceiveAnswer);
 end;

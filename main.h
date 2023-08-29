@@ -74,14 +74,16 @@
 #endif
 #ifdef COMM_SCI
     #define uint8_t char
-    #define SCI_ECHO_ON false // set true to show input and false to disable it
-    #define BUF_LEN 16 // length of the Rx-buffer
+    //#define SCI_ECHO_ON // set true to show input and false to disable it
+    #define SCI_CMD_LEN 12 // 10 characters + CRLF = AxM+vvvvCE\n\r
+    #define SCI_RINGBUF_LEN SCI_CMD_LEN*5 // place for 5 commands
 	
-    char sciCmdBuf[BUF_LEN]; // Rx-buffer
-    volatile uint16_t sciBufPos = 0; // Position of the next char in the buffer
-    volatile bool sciCmdReady = false; // Indicates that a command is ready for execution and blocks further input until reset to 0.
+    char sciRingbuffer[SCI_RINGBUF_LEN];
+    uint16_t sciRingbufferPointer = 0;
 	
-    extern void sciProcessCmd();
+    extern void checkDRV8320status();
+    extern void sciSearchCmd();
+    extern void sciProcessCmd(uint16_t cmdPosition);
     extern void sciTx_msg(char * msg);
     extern void sciTx_uint8(uint16_t data);
     extern void sciTx_uint16(uint16_t data);
