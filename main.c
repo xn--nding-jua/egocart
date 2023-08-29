@@ -1,5 +1,5 @@
 //#############################################################################
-// eGoCart BLDC Control v0.0.1, 31.07.2023
+// eGoCart BLDC Control v0.1.0, 29.08.2023
 // Code based on TI C2000WARE MotorControl SDK v5, Example 11 Dual Motor
 // christian@noeding-online.de, https://www.pcdimmer.de
 //
@@ -405,8 +405,8 @@ void main(void)
         // Set some global variables
         motorVars[ctrlNum].pwmISRCount = 0;
 
-        // set the default target frequency to 20.0Hz
-        motorVars[ctrlNum].speedRef_Hz = 20.0;
+        // set the default target frequency to 0.0Hz (STOP)
+        motorVars[ctrlNum].speedRef_Hz = 0.0;
 
         // disable the PWM
         HAL_disablePWM(halMtrHandle[ctrlNum]);
@@ -493,9 +493,6 @@ void main(void)
             }
         #endif
 
-        motorVars[HAL_MTR_1].flagEnableSys = systemVars.flagEnableSystem;
-        motorVars[HAL_MTR_2].flagEnableSys = systemVars.flagEnableSystem;
-
         // Waiting for enable system flag to be set
         if (systemVars.flagEnableSystem == false) {
             // wait for system to be enabled by user
@@ -505,27 +502,6 @@ void main(void)
             HAL_disablePWM(halMtrHandle[HAL_MTR_2]);
         }else{
             // system is enabled
-			
-            if(systemVars.flagEnableSynControl == true)
-            {
-                // synchron control of both motors
-                motorVars[HAL_MTR_1].flagEnableRunAndIdentify = systemVars.flagEnableSystem;
-                motorVars[HAL_MTR_1].speedRef_Hz = systemVars.M1_speedSet_Hz;
-                motorVars[HAL_MTR_1].accelerationMax_Hzps = systemVars.M1_accelerationMaxSet_Hzps;
-
-                motorVars[HAL_MTR_2].flagEnableRunAndIdentify = systemVars.flagEnableSystem;
-                motorVars[HAL_MTR_2].speedRef_Hz = systemVars.M1_speedSet_Hz;
-                motorVars[HAL_MTR_2].accelerationMax_Hzps = systemVars.M1_accelerationMaxSet_Hzps;
-            }else{
-                // individual control of both motors
-                motorVars[HAL_MTR_1].flagEnableRunAndIdentify = systemVars.flagEnableSystem;
-                motorVars[HAL_MTR_1].speedRef_Hz = systemVars.M1_speedSet_Hz;
-                motorVars[HAL_MTR_1].accelerationMax_Hzps = systemVars.M1_accelerationMaxSet_Hzps;
-
-                motorVars[HAL_MTR_2].flagEnableRunAndIdentify = systemVars.flagEnableSystem;
-                motorVars[HAL_MTR_2].speedRef_Hz = systemVars.M2_speedSet_Hz;
-                motorVars[HAL_MTR_2].accelerationMax_Hzps = systemVars.M2_accelerationMaxSet_Hzps;
-			}
 
             //
             // 1ms time base
@@ -825,42 +801,46 @@ __interrupt void mainISR(void)
             // This is optional, user's Park works as well
             EST_getIdq_A(estHandle[isrNum], (MATH_Vec2 *)(&(Idq_in_A[isrNum])));
 
-            // run the speed controller
-            // run the speed controller
-            if(EST_doSpeedCtrl(estHandle[isrNum]))
-            {
-                counterSpeed[isrNum]++;
+			if (motorVars[isrNum].motorCtrlMode == MOTORCTRL_MODE_SPEED)
+			{
+				// run speed controller for this motor
+				if(EST_doSpeedCtrl(estHandle[isrNum]))
+				{
+					counterSpeed[isrNum]++;
 
-                if(counterSpeed[isrNum] >= userParams[isrNum].numCtrlTicksPerSpeedTick)
-                {
-                    counterSpeed[isrNum] = 0;
+					if(counterSpeed[isrNum] >= userParams[isrNum].numCtrlTicksPerSpeedTick)
+					{
+						counterSpeed[isrNum] = 0;
 
-                    PI_run_series(piHandle_spd[isrNum],
-                                  estInputData[isrNum].speed_ref_Hz,
-                                  estOutputData[isrNum].fm_lp_rps * MATH_ONE_OVER_TWO_PI,
-                                  0.0,
-                                  (float32_t *)(&(motorVars[isrNum].IsRef_A)));
+						// speed-controller
+						PI_run_series(piHandle_spd[isrNum],
+									  estInputData[isrNum].speed_ref_Hz,
+									  estOutputData[isrNum].fm_lp_rps * MATH_ONE_OVER_TWO_PI,
+									  0.0,
+									  (float32_t *)(&(motorVars[isrNum].IsRef_A)));
 
-                    PI_run_series(piHandle_fwc[isrNum],
-                                  motorVars[isrNum].VsRef_V,
-                                  motorVars[isrNum].Vs_V,
-                                  0.0,
-                                  (float32_t *)(&(motorVars[isrNum].angleCurrent_rad)));
+						PI_run_series(piHandle_fwc[isrNum],
+									  motorVars[isrNum].VsRef_V,
+									  motorVars[isrNum].Vs_V,
+									  0.0,
+									  (float32_t *)(&(motorVars[isrNum].angleCurrent_rad)));
 
-                    // compute the sin/cos phasor using fast RTS function, callable assembly
-                    fwcPhasor[isrNum].value[0] = sinf(motorVars[isrNum].angleCurrent_rad);
-                    fwcPhasor[isrNum].value[1] = cosf(motorVars[isrNum].angleCurrent_rad);
+						// compute the sin/cos phasor using fast RTS function, callable assembly
+						fwcPhasor[isrNum].value[0] = sinf(motorVars[isrNum].angleCurrent_rad);
+						fwcPhasor[isrNum].value[1] = cosf(motorVars[isrNum].angleCurrent_rad);
 
-                    Idq_ref_A[isrNum].value[0] = motorVars[isrNum].IsRef_A * fwcPhasor[isrNum].value[0];
-
-                    Idq_ref_A[isrNum].value[1] = motorVars[isrNum].IsRef_A * fwcPhasor[isrNum].value[1];
-                }
-            }
-            else
-            {
-                Idq_ref_A[isrNum].value[1] = 0.0;
-            }
-
+						Idq_ref_A[isrNum].value[0] = motorVars[isrNum].IsRef_A * fwcPhasor[isrNum].value[0];
+						Idq_ref_A[isrNum].value[1] = motorVars[isrNum].IsRef_A * fwcPhasor[isrNum].value[1];
+					}
+				}
+				else
+				{
+					Idq_ref_A[isrNum].value[1] = 0.0;
+				}
+			}else{
+				// use only current-controller to control torque for this motor. Id and Iq will be set in SCI-receiver
+			}
+			
             // update Id reference for Rs OnLine
             EST_updateId_ref_A(estHandle[isrNum], (float32_t *)&(Idq_ref_A[isrNum].value[0]));
 
@@ -1029,85 +1009,151 @@ void runOffsetsCalculation(const uint16_t motorNum)
         AxMvvvvE with "A" and "E" as start- and end-byte, "M" to select motor, "x" as command-byte and "vvvv" as 4 value-bytes
 
         supported commands:
-        x = S = Set speed as ASCII: "S" = "ASMyyyyE" with yyyy = 0 ... 9999 in ASCII
-        x = R = Set reverse speed as ASCII: "R" = "ARMyyyyE" with yyyy = 0 ... 9999 in ASCII
-        x = A = Set acceleration as ASCII: "A" = "AAMyyyyE" with yyyy = 0 ... 9999 in ASCII
+        x = S = Set speed as ASCII: "S" = "ASM+yyyyE" with yyyy = 0 ... 9999 in ASCII
+        x = A = Set acceleration as ASCII: "A" = "AAM+yyyyE" with yyyy = 0 ... 9999 in ASCII
         x = F = Set system-flag ("F" = "AF_000vE"): v=0=disabled, =1=MTR1/MTR2 individual, =3=MTR2=MTR1
         x = V = Receive data about the detected motor
         x = I = Receive information-string of the controller
 
+        example:
+        enable system:                  AF0+0001E
+        set acceleration for motor 1:   AA0+0100E
+        set positive speed for motor 1: AS0+0500E
+        set negative speed for motor 2: AS1-0500E
+        switch to current-control for motor 1:  AT0+0000E
 
-        x = s = Set speed as 32-bit-float: "a" = "AaMyyyyE" with yyyy = 4x 8-bit values of a float32
-        x = a = Set acceleration as 32-bit-float: "a" = "AaMyyyyE" with yyyy = 4x 8-bit values of a float32
+        unused commands for now:
+        x = s = Set speed as 32-bit-float: "a" = "AaM0yyyyE" with yyyy = 4x 8-bit values of a float32
+        x = a = Set acceleration as 32-bit-float: "a" = "AaM0yyyyE" with yyyy = 4x 8-bit values of a float32
         */
-
+        uint16_t motorNum;
 
         if (sciCmdReady) {
-            // test for "A" and "E": AxMvvvvE
-            if (((sciCmdBuf[0] & 0x00FF) == 65) && ((sciCmdBuf[7] & 0x00FF) == 69)) {
+            // test for "A" and "E": AxM+vvvvE
+            if ((sciCmdBuf[0] == 65) && (sciCmdBuf[8] == 69)) {
                 // message seems to be consistent
 
                 // check for desired command
                 if (sciCmdBuf[1]==83){
-                    // received command "S" = "ASMxxxxE"
-                    uint16_t motor = ((sciCmdBuf[2] & 0x00FF)-48);
-                    float32_t newSetpoint = ((((sciCmdBuf[3] & 0x00FF)-48)* (float32_t)1000) + (((sciCmdBuf[4] & 0x00FF)-48)* (float32_t)100) + (((sciCmdBuf[5] & 0x00FF)-48)* (float32_t)10) + ((sciCmdBuf[6] & 0x00FF)-48));
-                    if ((newSetpoint >= 0) && (newSetpoint < MOTOR_MAX_SPEED)){
-                        if (motor==HAL_MTR_1) {
-                            systemVars.M1_speedSet_Hz = (newSetpoint/(60.0f / userParams[motor].motor_numPolePairs)); // convert rpm to Hz
-                        }else{
-                            systemVars.M2_speedSet_Hz = (newSetpoint/(60.0f / userParams[motor].motor_numPolePairs)); // convert rpm to Hz
-                        }
-                        sciTx_msg("RxD: new setPoint for speed\n\r\0");
+                    // received command "S" = "ASM+xxxxE"
+                    // new setpoint for speed
+
+                    motorNum = (sciCmdBuf[2]-48);
+                    float32_t sign;
+                    if (sciCmdBuf[3] == 45) {
+                        sign = -1;
                     }else{
-                        sciTx_msg("ERROR: Value out of spec!\n\r\0");
+                        sign = 1;
                     }
-                }else if (sciCmdBuf[1]==82){
-                    // received command "R" = "ARMxxxxE"
-                    uint16_t motor = ((sciCmdBuf[2] & 0x00FF)-48);
-                    float32_t newSetpoint = -((((sciCmdBuf[3] & 0x00FF)-48)* (float32_t)1000) + (((sciCmdBuf[4] & 0x00FF)-48)* (float32_t)100) + (((sciCmdBuf[5] & 0x00FF)-48)* (float32_t)10) + ((sciCmdBuf[6] & 0x00FF)-48));
-                    if ((newSetpoint <= 0) && (newSetpoint > -MOTOR_MAX_SPEED)){
-                        if (motor==HAL_MTR_1) {
-                            systemVars.M1_speedSet_Hz = (newSetpoint/(60.0f / userParams[motor].motor_numPolePairs)); // convert rpm to Hz
+                    float32_t newSetpoint = (((sciCmdBuf[4]-48)* (float32_t)1000) + ((sciCmdBuf[5]-48)* (float32_t)100) + ((sciCmdBuf[6]-48)* (float32_t)10) + (sciCmdBuf[7]-48));
+                    if ((newSetpoint >= 0) && (newSetpoint < MOTOR_MAX_SPEED)){
+                        if(systemVars.flagEnableSynControl == true) {
+                            motorVars[HAL_MTR_1].speedRef_Hz = ((sign*newSetpoint)/(60.0f / userParams[motorNum].motor_numPolePairs)); // convert rpm to Hz
+                            motorVars[HAL_MTR_2].speedRef_Hz = motorVars[HAL_MTR_1].speedRef_Hz;
                         }else{
-                            systemVars.M2_speedSet_Hz = (newSetpoint/(60.0f / userParams[motor].motor_numPolePairs)); // convert rpm to Hz
+                            motorVars[motorNum].speedRef_Hz = ((sign*newSetpoint)/(60.0f / userParams[motorNum].motor_numPolePairs)); // convert rpm to Hz
                         }
                         sciTx_msg("RxD: new setPoint for speed\n\r\0");
                     }else{
                         sciTx_msg("ERROR: Value out of spec!\n\r\0");
                     }
                 }else if (sciCmdBuf[1]==65){
-                    // received command "A" = "AAMxxxxE"
-                    uint16_t motor = ((sciCmdBuf[2] & 0x00FF)-48);
-                    float32_t newSetpoint = (((sciCmdBuf[3]-48)*1000) + ((sciCmdBuf[4]-48)*100) + ((sciCmdBuf[5]-48)*10) + (sciCmdBuf[6]-48));
+                    // received command "A" = "AAM+xxxxE"
+                    // new setpoint for speed-acceleration (only valid for speed-control-mode)
+
+                    motorNum = (sciCmdBuf[2]-48);
+                    float32_t newSetpoint = (((sciCmdBuf[4]-48)*1000) + ((sciCmdBuf[5]-48)*100) + ((sciCmdBuf[6]-48)*10) + (sciCmdBuf[7]-48));
                     if ((newSetpoint >= 0) && (newSetpoint < MOTOR_MAX_ACCEL)){
-                        if (motor==HAL_MTR_1) {
-                            systemVars.M1_accelerationMaxSet_Hzps = (newSetpoint/(60.0f / userParams[motor].motor_numPolePairs)); // convert rpm/s to Hz/s
+                        if(systemVars.flagEnableSynControl == true) {
+                            motorVars[HAL_MTR_1].accelerationMax_Hzps = (newSetpoint/(60.0f / userParams[motorNum].motor_numPolePairs)); // convert rpm/s to Hz/s
+                            motorVars[HAL_MTR_2].accelerationMax_Hzps = motorVars[HAL_MTR_1].accelerationMax_Hzps;
                         }else{
-                            systemVars.M2_accelerationMaxSet_Hzps = (newSetpoint/(60.0f / userParams[motor].motor_numPolePairs)); // convert rpm/s to Hz/s
+                            motorVars[motorNum].accelerationMax_Hzps = (newSetpoint/(60.0f / userParams[motorNum].motor_numPolePairs)); // convert rpm/s to Hz/s
                         }
                         sciTx_msg("RxD: new setPoint for acceleration\n\r\0");
                     }else{
                         sciTx_msg("ERROR: Value out of spec!\n\r\0");
                     }
+                }else if (sciCmdBuf[1]==68){
+                    // received command "D" = "ADM+xxxxE"
+                    // new setpoint for Id
+
+                    motorNum = (sciCmdBuf[2]-48);
+                    float32_t sign;
+                    if (sciCmdBuf[3] == 45) {
+                        sign = -1;
+                    }else{
+                        sign = 1;
+                    }
+                    float32_t newSetpoint = sign * ((((sciCmdBuf[4]-48)* (float32_t)1000) + ((sciCmdBuf[5]-48)* (float32_t)100) + ((sciCmdBuf[6]-48)* (float32_t)10) + (sciCmdBuf[7]-48))/(float32_t)9999) * userParams[motorNum].maxCurrent_A;
+
+                    Idq_ref_A[motorNum].value[0] = newSetpoint;
+                    sciTx_msg("RxD: new setPoint for Id\n\r\0");
+                }else if (sciCmdBuf[1]==81){
+                    // received command "Q" = "AQM+xxxxE"
+                    // new setpoint for Id
+
+                    motorNum = (sciCmdBuf[2]-48);
+                    float32_t sign;
+                    if (sciCmdBuf[3] == 45) {
+                        sign = -1;
+                    }else{
+                        sign = 1;
+                    }
+                    float32_t newSetpoint = sign * ((((sciCmdBuf[4]-48)* (float32_t)1000) + ((sciCmdBuf[5]-48)* (float32_t)100) + ((sciCmdBuf[6]-48)* (float32_t)10) + (sciCmdBuf[7]-48))/(float32_t)9999) * userParams[motorNum].maxCurrent_A;
+
+                    Idq_ref_A[motorNum].value[1] = newSetpoint;
+                    sciTx_msg("RxD: new setPoint for Iq\n\r\0");
                 }else if (sciCmdBuf[1]==70){
-                    // received command "F" = "AFM000xE"
-                    systemVars.flagEnableSystem = ((sciCmdBuf[6] - 48) & 0x0001);
-                    systemVars.flagEnableSynControl = ((sciCmdBuf[6] - 48) & 0x0002);
+                    // received command "F" = "AFM+000xE"
+                    // enable/disable system
+
+                    systemVars.flagEnableSystem = ((sciCmdBuf[7] - 48) & 0x0001);
+                    systemVars.flagEnableSynControl = ((sciCmdBuf[7] - 48) & 0x0002);
+
+                    motorVars[HAL_MTR_1].flagEnableSys = systemVars.flagEnableSystem;
+                    motorVars[HAL_MTR_2].flagEnableSys = systemVars.flagEnableSystem;
+                    motorVars[HAL_MTR_1].flagEnableRunAndIdentify = systemVars.flagEnableSystem;
+                    motorVars[HAL_MTR_2].flagEnableRunAndIdentify = systemVars.flagEnableSystem;
+
                     sciTx_msg("RxD: Set flag\n\r\0");
+                }else if (sciCmdBuf[1]==84){
+                    // received command "T" = "ATM+000xE"
+                    // switch motor to either speed-controlled-mode or current-(torque)-controlled-mode
+
+                    motorNum = (sciCmdBuf[2]-48);
+
+                    // reset user-parameters to zero (for safety-reasons)
+                    motorVars[motorNum].speedRef_Hz = 0.0; // set speed to zero
+                    Idq_ref_A[motorNum].value[0] = 0.0; // clear current references
+                    Idq_ref_A[motorNum].value[1] = 0.0; // clear current references
+
+                    // switch control-mode to desired value
+                    if ((sciCmdBuf[7]-48) == 0) {
+                        // 0=speed-controlled
+                        motorVars[motorNum].motorCtrlMode = MOTORCTRL_MODE_SPEED;
+                        sciTx_msg("RxD: Enable speed-control-mode\n\r\0");
+                    }else{
+                        // 1=torque-controlled
+                        motorVars[motorNum].motorCtrlMode = MOTORCTRL_MODE_TORQUE;
+                        sciTx_msg("RxD: Enable current-control-mode\n\r\0");
+                    }
+                    motorVars[motorNum].flagEnableSpeedCtrl = (motorVars[motorNum].motorCtrlMode == MOTORCTRL_MODE_SPEED);
                 }else if (sciCmdBuf[1]==86){
-                    // received command V = "AVM0000E"
-                    uint16_t motor = ((sciCmdBuf[2] & 0x00FF)-48);
-                    if ((motor == HAL_MTR_1) || (motor == HAL_MTR_2))
+                    // received command V = "AVM+0000E"
+                    // send values via SCI
+
+                    motorNum = (sciCmdBuf[2]-48);
+                    if ((motorNum == HAL_MTR_1) || (motorNum == HAL_MTR_2))
                     {
                         sciTx_uint8(65); // "A"
 
-                        sciTx_uint16(motorVars[motor].ctrlState);
-                        sciTx_uint16(motorVars[motor].estState);
+                        sciTx_uint16(motorVars[motorNum].ctrlState);
+                        sciTx_uint16(motorVars[motorNum].estState);
 
-                        sciTx_float(motorVars[motor].VdcBus_V); // DC-bus voltage
-                        sciTx_float(motorVars[motor].speed_krpm); // speed in 1/min
-                        sciTx_float(motorVars[motor].torque_Nm); // torque in Nm
+                        sciTx_float(motorVars[motorNum].VdcBus_V); // DC-bus voltage
+                        sciTx_float(motorVars[motorNum].speed_krpm); // speed in 1/min
+                        sciTx_float(motorVars[motorNum].torque_Nm); // torque in Nm
 
                         sciTx_uint8(69); // "E"
                         sciTx_uint8(13); // "CR"
@@ -1147,6 +1193,8 @@ void runOffsetsCalculation(const uint16_t motorNum)
 */
                 }else if (sciCmdBuf[1]==73){
                     // received command I = "AIMxxxxE"
+                    // send some status-information
+
                     sciTx_msg("Dual-Motor-Controller for BLDC\n\r\0");
                     sciTx_msg(VERSION_STRING);
                     sciTx_msg(" built on " __DATE__ " " __TIME__ "\n\r\0");

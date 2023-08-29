@@ -15,24 +15,6 @@ type
     Button3: TButton;
     Timer1: TTimer;
     Button4: TButton;
-    speedbar: TTrackBar;
-    Label12: TLabel;
-    Label13: TLabel;
-    Label14: TLabel;
-    Label15: TLabel;
-    Label16: TLabel;
-    Label17: TLabel;
-    Label18: TLabel;
-    Label19: TLabel;
-    Label20: TLabel;
-    Label21: TLabel;
-    Label22: TLabel;
-    accbar: TTrackBar;
-    Label23: TLabel;
-    speedlbl: TLabel;
-    acclbl: TLabel;
-    Button2: TButton;
-    Button5: TButton;
     GroupBox1: TGroupBox;
     Label1: TLabel;
     Label2: TLabel;
@@ -47,6 +29,27 @@ type
     Label27: TLabel;
     Label28: TLabel;
     Label29: TLabel;
+    Button8: TButton;
+    GroupBox3: TGroupBox;
+    Label12: TLabel;
+    Label13: TLabel;
+    Label14: TLabel;
+    Label15: TLabel;
+    Label16: TLabel;
+    Label17: TLabel;
+    Label18: TLabel;
+    Label19: TLabel;
+    Label20: TLabel;
+    Label21: TLabel;
+    Label22: TLabel;
+    Label23: TLabel;
+    speedlbl: TLabel;
+    acclbl: TLabel;
+    speedbar: TTrackBar;
+    accbar: TTrackBar;
+    Button2: TButton;
+    Button5: TButton;
+    GroupBox4: TGroupBox;
     Label7: TLabel;
     Label8: TLabel;
     Label9: TLabel;
@@ -65,7 +68,31 @@ type
     TrackBar2: TTrackBar;
     Button6: TButton;
     Button7: TButton;
-    Button8: TButton;
+    GroupBox5: TGroupBox;
+    GroupBox6: TGroupBox;
+    Button9: TButton;
+    Button10: TButton;
+    Button11: TButton;
+    Button12: TButton;
+    Label39: TLabel;
+    Label40: TLabel;
+    Label41: TLabel;
+    Label42: TLabel;
+    Label43: TLabel;
+    TrackBar3: TTrackBar;
+    Label44: TLabel;
+    Button13: TButton;
+    Label45: TLabel;
+    Label46: TLabel;
+    Label47: TLabel;
+    Label48: TLabel;
+    Label49: TLabel;
+    TrackBar4: TTrackBar;
+    Label50: TLabel;
+    Button14: TButton;
+    Label51: TLabel;
+    Label52: TLabel;
+    Label53: TLabel;
     procedure Button1Click(Sender: TObject);
     procedure Butto3Click(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
@@ -79,6 +106,14 @@ type
     procedure Button6Click(Sender: TObject);
     procedure Button7Click(Sender: TObject);
     procedure Button8Click(Sender: TObject);
+    procedure Button9Click(Sender: TObject);
+    procedure Button10Click(Sender: TObject);
+    procedure Button12Click(Sender: TObject);
+    procedure Button11Click(Sender: TObject);
+    procedure TrackBar3Change(Sender: TObject);
+    procedure Button13Click(Sender: TObject);
+    procedure Button14Click(Sender: TObject);
+    procedure TrackBar4Change(Sender: TObject);
   private
     { Private declarations }
     RxData: array[0..41] of byte;
@@ -155,15 +190,17 @@ function Tmainform.SendCommand(command: string):boolean;
 var
   i:integer;
 begin
-    if not comport.Connected then
-      Button1.Click;
+  if not comport.Connected then
+    Button1.Click;
 
-    for i := 0 to length(command)-1 do
-    begin
-      comport.SendChar(command[i+1]); // strings are starting at 1 in delphi
-    end;
-    comport.SendByte(13); // CR
-    comport.SendByte(10); // LF
+  comport.FlushBuffers(true, true);
+  
+  for i := 0 to length(command)-1 do
+  begin
+    comport.SendChar(command[i+1]); // strings are starting at 1 in delphi
+  end;
+  comport.SendByte(13); // CR
+  comport.SendByte(10); // LF
 end;
 
 procedure Tmainform.Button1Click(Sender: TObject);
@@ -185,11 +222,8 @@ begin
 end;
 
 procedure Tmainform.Butto3Click(Sender: TObject);
-var
-  Answer:string;
 begin
-  comport.FlushBuffers(true, true);
-  SendCommand('AF00001E'); // 1 2
+  SendCommand('AF0+0001E'); // 1 2
   memo1.Lines.Add(ReceiveAnswer);
 end;
 
@@ -199,8 +233,7 @@ var
   i:integer;
   w:word;
 begin
-  comport.FlushBuffers(true, true);
-  SendCommand('AV00000E');
+  SendCommand('AV0+0000E');
   if ReceiveData then
   begin
     // expecting (1 + 2*2 + 3*4 + 3)=20 bytes
@@ -264,8 +297,7 @@ begin
 
   sleep(100);
 
-  comport.FlushBuffers(true, true);
-  SendCommand('AV10000E');
+  SendCommand('AV1+0000E');
   if ReceiveData then
   begin
     // expecting (1 + 2*2 + 3*4 + 3)=20 bytes
@@ -335,23 +367,17 @@ begin
 end;
 
 procedure Tmainform.Button4Click(Sender: TObject);
-var
-  Answer:string;
 begin
-  comport.FlushBuffers(true, true);
-  SendCommand('AF00000E');
+  SendCommand('AF0+0000E');
   memo1.Lines.Add(ReceiveAnswer);
 end;
 
 procedure Tmainform.speedbarChange(Sender: TObject);
 var
-  Answer:string;
   valuestr:string;
   value:single;
   reverse:bool;
 begin
-  comport.FlushBuffers(true, true);
-
   // sending ASCII-command
   reverse:=speedbar.position<0;
   valuestr:=inttostr(abs(speedbar.Position));
@@ -363,9 +389,9 @@ begin
     valuestr:='0'+valuestr;
 
   if reverse then
-    SendCommand('AR0' + valuestr + 'E')
+    SendCommand('AS0-' + valuestr + 'E')
   else
-    SendCommand('AS0' + valuestr + 'E');
+    SendCommand('AS0+' + valuestr + 'E');
 
   speedlbl.Caption:= inttostr(speedbar.Position) + ' rpm';
 
@@ -374,10 +400,8 @@ end;
 
 procedure Tmainform.accbarChange(Sender: TObject);
 var
-  Answer:string;
   valuestr:string;
 begin
-  comport.FlushBuffers(true, true);
   valuestr:=inttostr(accbar.Position);
   if length(valuestr)=1 then
     valuestr:='000'+valuestr
@@ -388,7 +412,7 @@ begin
 
   acclbl.Caption:= inttostr(accbar.Position) + ' rpm/s';
 
-  SendCommand('AA0' + valuestr + 'E');
+  SendCommand('AA0+' + valuestr + 'E');
   memo1.Lines.Add(ReceiveAnswer);
 end;
 
@@ -404,13 +428,10 @@ end;
 
 procedure Tmainform.TrackBar1Change(Sender: TObject);
 var
-  Answer:string;
   valuestr:string;
   value:single;
   reverse:bool;
 begin
-  comport.FlushBuffers(true, true);
-
   // sending ASCII-command
   reverse:=trackbar1.position<0;
   valuestr:=inttostr(abs(trackbar1.Position));
@@ -422,9 +443,9 @@ begin
     valuestr:='0'+valuestr;
 
   if reverse then
-    SendCommand('AR1' + valuestr + 'E')
+    SendCommand('AS1-' + valuestr + 'E')
   else
-    SendCommand('AS1' + valuestr + 'E');
+    SendCommand('AS1+' + valuestr + 'E');
 
   label37.Caption:= inttostr(trackbar1.Position) + ' rpm';
 
@@ -433,10 +454,8 @@ end;
 
 procedure Tmainform.TrackBar2Change(Sender: TObject);
 var
-  Answer:string;
   valuestr:string;
 begin
-  comport.FlushBuffers(true, true);
   valuestr:=inttostr(trackbar2.Position);
   if length(valuestr)=1 then
     valuestr:='000'+valuestr
@@ -447,7 +466,7 @@ begin
 
   label38.Caption:= inttostr(trackbar2.Position) + ' rpm/s';
 
-  SendCommand('AA1' + valuestr + 'E');
+  SendCommand('AA1+' + valuestr + 'E');
   memo1.Lines.Add(ReceiveAnswer);
 end;
 
@@ -462,11 +481,90 @@ begin
 end;
 
 procedure Tmainform.Button8Click(Sender: TObject);
-var
-  Answer:string;
 begin
-  comport.FlushBuffers(true, true);
-  SendCommand('AF00003E'); // 1 2
+  SendCommand('AF0+0003E'); // 1 2
+  memo1.Lines.Add(ReceiveAnswer);
+end;
+
+procedure Tmainform.Button9Click(Sender: TObject);
+begin
+  SendCommand('AT0+0000E');
+  memo1.Lines.Add(ReceiveAnswer);
+end;
+
+procedure Tmainform.Button10Click(Sender: TObject);
+begin
+  SendCommand('AT1+0000E');
+  memo1.Lines.Add(ReceiveAnswer);
+end;
+
+procedure Tmainform.Button12Click(Sender: TObject);
+begin
+  SendCommand('AT1+0001E');
+  memo1.Lines.Add(ReceiveAnswer);
+end;
+
+procedure Tmainform.Button11Click(Sender: TObject);
+begin
+  SendCommand('AT0+0001E');
+  memo1.Lines.Add(ReceiveAnswer);
+end;
+
+procedure Tmainform.TrackBar3Change(Sender: TObject);
+var
+  valuestr:string;
+  value:single;
+  reverse:bool;
+begin
+  // sending ASCII-command
+  reverse:=trackbar3.position<0;
+  valuestr:=inttostr(abs(trackbar3.Position));
+  if length(valuestr)=1 then
+    valuestr:='000'+valuestr
+  else if length(valuestr)=2 then
+    valuestr:='00'+valuestr
+  else if length(valuestr)=3 then
+    valuestr:='0'+valuestr;
+
+  if reverse then
+    SendCommand('AQ0-' + valuestr + 'E')
+  else
+    SendCommand('AQ0+' + valuestr + 'E');
+
+  memo1.Lines.Add(ReceiveAnswer);
+end;
+
+procedure Tmainform.Button13Click(Sender: TObject);
+begin
+  trackbar3.Position:=0;
+end;
+
+procedure Tmainform.Button14Click(Sender: TObject);
+begin
+  trackbar4.Position:=0;
+end;
+
+procedure Tmainform.TrackBar4Change(Sender: TObject);
+var
+  valuestr:string;
+  value:single;
+  reverse:bool;
+begin
+  // sending ASCII-command
+  reverse:=trackbar4.position<0;
+  valuestr:=inttostr(abs(trackbar4.Position));
+  if length(valuestr)=1 then
+    valuestr:='000'+valuestr
+  else if length(valuestr)=2 then
+    valuestr:='00'+valuestr
+  else if length(valuestr)=3 then
+    valuestr:='0'+valuestr;
+
+  if reverse then
+    SendCommand('AQ1-' + valuestr + 'E')
+  else
+    SendCommand('AQ1+' + valuestr + 'E');
+
   memo1.Lines.Add(ReceiveAnswer);
 end;
 

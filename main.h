@@ -587,21 +587,13 @@ typedef struct _MOTOR_Vars_t_
 //------------------------------------------------------------------------
 #define SYSTEM_VARS_INIT  { \
         false, \
-        false, \
-        0.0, \
-        50.0, \
-        0.0, \
-        50.0 \
+        false \
 }
 
 typedef struct _SYSTEM_Vars_t_
 {
     bool flagEnableSystem;
     bool flagEnableSynControl;
-    float32_t M1_speedSet_Hz;
-    float32_t M1_accelerationMaxSet_Hzps;
-    float32_t M2_speedSet_Hz;
-    float32_t M2_accelerationMaxSet_Hzps;
 }SYSTEM_Vars_t;
 
 extern volatile SYSTEM_Vars_t systemVars;

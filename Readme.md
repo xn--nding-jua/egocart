@@ -15,12 +15,16 @@ The C2000 microcontroller receives its set-points either via SCI/UART based on a
 * [ ] touchscreen headup-display using a RaspberryPi Zero. Up to now there is a Windows-GUI programmed in Delphi 7 that can be used to control the hardware
 
 ## Commands
-* Set forward-speed for motor 1/2: AS0xxxxE / AS1xxxxE (with xxxx between 0rpm and 9999rpm)
-* Set reverse-speed for motor 1/2: AR0xxxxE / AR1xxxxE (with xxxx between 0rpm and 9999rpm)
-* Set maximum acceleration for motor 1/2: AA0xxxxE / AA1xxxxE (with xxxx between 0rpm/s and 9999rpm/s)
-* Start/Stop system: AFM0003E / AFM0000E
-* Read data for motor 1/2: AV00000E / AV10000E
-* Get general information about the control: AI00000E
+* Set forward-speed for motor 1/2: AS0+xxxxE / AS1+xxxxE (with xxxx between 0rpm and 9999rpm)
+* Set reverse-speed for motor 1/2: AS0-xxxxE / AS1-xxxxE (with xxxx between 0rpm and 9999rpm)
+* Set maximum acceleration for motor 1/2: AA0+xxxxE / AA1+xxxxE (with xxxx between 0rpm/s and 9999rpm/s)
+* switch to speed-controlled-mode for motor 1/2: AT0+0000E / AT1+0000E (all reference-values [current or speed] will be set to zero)
+* switch to current-(torque)-controlled-mode for motor 1/2: AT0+0001E / AT1+0001E (all reference-values [current or speed] will be set to zero)
+* set forward Iq-current (in current-(torque)-controlled-mode): AQ0+xxxxE / AQ1+xxxxE(with xxxx between 0 and 9999, which represents 0...Imax)
+* set reverse Iq-current (in current-(torque)-controlled-mode): AQ0-xxxxE / AQ1-xxxxE(with xxxx between 0 and 9999, which represents 0...Imax)
+* Start/Stop system: AF0+0003E / AF0+0000E
+* Read data for motor 1/2: AV0+0000E / AV1+0000E
+* Get general information about the control: AI0+0000E
 
 ## Instructions to use this project
 * Download and install TI CodeComposerStudio from https://www.ti.com/tool/download/CCSTUDIO (v12.4 has been used for compiling)
