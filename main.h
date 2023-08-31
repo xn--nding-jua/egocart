@@ -85,7 +85,7 @@
     extern void checkDRV8320status();
     extern uint16_t sciRingbufferPointerOverflow(uint16_t bufPointer);
     extern void sciSearchCmd();
-    extern void sciProcessCmd(uint16_t cmdPosition);
+    extern void sciProcessCmd(uint16_t command[SCI_PAYLOAD_LEN]);
     extern void sciTx_msg(char * msg);
     extern void sciTx_uint8(uint16_t data);
     extern void sciTx_uint16(uint16_t data);
