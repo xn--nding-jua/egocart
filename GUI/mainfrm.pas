@@ -93,6 +93,8 @@ type
     Label51: TLabel;
     Label52: TLabel;
     Label53: TLabel;
+    ComboBox1: TComboBox;
+    ComboBox2: TComboBox;
     procedure Button1Click(Sender: TObject);
     procedure Butto3Click(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
@@ -200,7 +202,7 @@ begin
   command_sum:=0;
   for i := 0 to length(command)-1 do
   begin
-    command_sum:=command_sum+byte(command[i]);
+    command_sum:=command_sum+byte(command[i+1]); // strings in Delphi begin at 1(!!!)
   end;
   ErrorCheckByte:=trunc(command_sum/length(command));
 
@@ -211,6 +213,8 @@ end;
 
 procedure Tmainform.Button1Click(Sender: TObject);
 begin
+  comport.PortName:='\\.\COM'+inttostr(combobox1.ItemIndex+1);
+  comport.BaudRateValue:=strtoint(combobox2.Items[combobox2.ItemIndex]);
   comport.Connect;
   timer1.Enabled:=true;
 end;
@@ -381,9 +385,11 @@ end;
 procedure Tmainform.speedbarChange(Sender: TObject);
 var
   valuestr:string;
+  value_array:array[0..3] of byte;
   value:single;
   reverse:bool;
 begin
+{
   // sending ASCII-command
   reverse:=speedbar.position<0;
   valuestr:=inttostr(abs(speedbar.Position));
@@ -398,6 +404,12 @@ begin
     SendCommand('S0-' + valuestr)
   else
     SendCommand('S0+' + valuestr);
+}
+
+  // sending float-command
+  value:=speedbar.position; // copy speed-value to single-variable
+  move(value, value_array[0], 4); // copy bytes into byte-array
+  SendCommand('s0+' + char(value_array[3]) + char(value_array[2]) + char(value_array[1]) + char(value_array[0]));
 
   speedlbl.Caption:= inttostr(speedbar.Position) + ' rpm';
 

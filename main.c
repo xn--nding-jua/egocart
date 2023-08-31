@@ -459,8 +459,6 @@ void main(void)
     while(true) {
         #ifdef COMM_SCI
             sciSearchCmd();
-
-            checkDRV8320status();
         #endif
 
         // Waiting for enable system flag to be set
@@ -969,67 +967,24 @@ void runOffsetsCalculation(const uint16_t motorNum)
 } // end of runOffsetsCalculation() function
 
 #ifdef COMM_SCI
-    void checkDRV8320status() {
-        // check status of DRV8320RS every second
-        if ((counterLED > 8000) && (counterLED < 8005)) {
-            // check DRV8320RS for errors
-            for(ctrlNum = HAL_MTR_1; ctrlNum <= HAL_MTR_2; ctrlNum++)
-            {
-                drvSPI8320Vars[ctrlNum].readCmd=true;
-                HAL_readDRVData(halMtrHandle[ctrlNum], &drvSPI8320Vars[ctrlNum]);
-
-                if (drvSPI8320Vars[ctrlNum].Stat_Reg_00.FAULT) {
-                    // error in DRV8320 detected
-                    if (ctrlNum == HAL_MTR_1) { sciTx_msg("BOOSTXL #1 ERROR! nFAULT: \0"); }
-                    if (ctrlNum == HAL_MTR_2) { sciTx_msg("BOOSTXL #2 ERROR! nFAULT: \0"); }
-
-                    if (drvSPI8320Vars[ctrlNum].Stat_Reg_00.VDS_OCP) { sciTx_msg("VDS_OCP \0"); }
-                    if (drvSPI8320Vars[ctrlNum].Stat_Reg_00.GDF) { sciTx_msg("GDF \0"); }
-                    if (drvSPI8320Vars[ctrlNum].Stat_Reg_00.UVLO) { sciTx_msg("UVLO \0"); }
-                    if (drvSPI8320Vars[ctrlNum].Stat_Reg_00.OTSD) { sciTx_msg("OTSD \0"); }
-                    if (drvSPI8320Vars[ctrlNum].Stat_Reg_00.VDS_HA) { sciTx_msg("VDS_HA \0"); }
-                    if (drvSPI8320Vars[ctrlNum].Stat_Reg_00.VDS_LA) { sciTx_msg("VDS_LA \0"); }
-                    if (drvSPI8320Vars[ctrlNum].Stat_Reg_00.VDS_HB) { sciTx_msg("VDS_HB \0"); }
-                    if (drvSPI8320Vars[ctrlNum].Stat_Reg_00.VDS_LB) { sciTx_msg("VDS_LB \0"); }
-                    if (drvSPI8320Vars[ctrlNum].Stat_Reg_00.VDS_HC) { sciTx_msg("VDS_HC \0"); }
-                    if (drvSPI8320Vars[ctrlNum].Stat_Reg_00.VDS_LC) { sciTx_msg("VDS_LC \0"); }
-
-                    sciTx_msg("\n\r\0");
-                }else{
-                    //if (ctrlNum == HAL_MTR_1) { sciTx_msg("BOOSTXL #1 OK\n\r\0"); }
-                    //if (ctrlNum == HAL_MTR_2) { sciTx_msg("BOOSTXL #2 OK\n\r\0"); }
-                }
-            }
-        }
-    }
-
-    uint16_t sciRingbufferPointerOverflow(uint16_t bufPointer) {
-        if (bufPointer>=SCI_RINGBUF_LEN) {
-            return (bufPointer-SCI_RINGBUF_LEN);
-        }else{
-            return bufPointer;
-        }
-    }
-
     void sciSearchCmd() {
-        // scan sciRingbuffer for valid commands like AxM+vvvvCE\n\r. We have to go beyond the regular buffer length to
+        // scan sciRingbuffer for valid commands like AxM+vvvvCE\n\r
         uint16_t i;
         uint16_t j;
         uint32_t ErrorCheckByte;
         for (i = 0; i < (SCI_RINGBUF_LEN + SCI_CMD_LEN - 1); i++) { // increment (SCI_CMD_LEN-1) beyond SCI_RINGBUF_LEN to catch commands around the border
             if ((sciRingbuffer[sciRingbufferPointerOverflow(i)] == 65) && // check for "A"
-                    ((sciRingbuffer[sciRingbufferPointerOverflow(i+2)] == 48) || (sciRingbuffer[sciRingbufferPointerOverflow(i+2)] == 49)) && // check for "0" or "1"
-                    ((sciRingbuffer[sciRingbufferPointerOverflow(i+3)] == 43) || (sciRingbuffer[sciRingbufferPointerOverflow(i+3)] == 45)) && // check for "+" or "-"
+                    (((sciRingbuffer[sciRingbufferPointerOverflow(i+2)]-48) == HAL_MTR_1) || ((sciRingbuffer[sciRingbufferPointerOverflow(i+2)]-48) == HAL_MTR_2)) && // check for valid motor-data
                     (sciRingbuffer[sciRingbufferPointerOverflow(i+9)] == 69)) // check for "E"
             {
                 // check error-check-byte
                 ErrorCheckByte = 0;
-                for (j=i+1; j<=(i+7); j++) { // summarize all values between "A" and "E" without "C": A xM+vvvv CE\n\r
+                for (j=i+1; j<=(i + SCI_PAYLOAD_LEN); j++) { // summarize all values between "A" and "E" without "C": A xM+vvvv CE\n\r
                     ErrorCheckByte += sciRingbuffer[sciRingbufferPointerOverflow(j)];
                 }
-                ErrorCheckByte = trunc((float32_t)(ErrorCheckByte/(float32_t)(SCI_CMD_LEN - 5))); // length of payload, without "A", "E" and CR/LF
+                ErrorCheckByte = (ErrorCheckByte/SCI_PAYLOAD_LEN); // length of payload, without "A", "C", "E" and CR/LF
 
-                //if (sciRingbuffer[sciRingbufferPointerOverflow(i+8)] == ErrorCheckByte) { // test for "E"
+                if (sciRingbuffer[sciRingbufferPointerOverflow(i+8)] == ErrorCheckByte) { // test for "E"
                     //we found a valid command. Process command, than set array-positions to zero
 
                     sciProcessCmd(i);
@@ -1038,10 +993,10 @@ void runOffsetsCalculation(const uint16_t motorNum)
                     for (j=i; j<(i + SCI_CMD_LEN); j++) {
                         sciRingbuffer[sciRingbufferPointerOverflow(j)] = 0;
                     }
-                //}else{
+                }else{
                     // wrong error-check-byte
-                //    sciTx_msg("ERROR: Wrong ErrorCheckByte\n\r\0");
-                //}
+                    sciTx_msg("ERROR: Wrong ErrorCheckByte\n\r\0");
+                }
             }
         }
     }
@@ -1087,10 +1042,29 @@ void runOffsetsCalculation(const uint16_t motorNum)
             float32_t newSetpoint = (((sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+4)]-48)* (float32_t)1000) + ((sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+5)]-48)* (float32_t)100) + ((sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+6)]-48)* (float32_t)10) + (sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+7)]-48));
             if ((newSetpoint >= 0) && (newSetpoint < MOTOR_MAX_SPEED)){
                 if(systemVars.flagEnableSynControl == true) {
-                    motorVars[HAL_MTR_1].speedRef_Hz = ((sign*newSetpoint)/(60.0f / userParams[motorNum].motor_numPolePairs)); // convert rpm to Hz
-                    motorVars[HAL_MTR_2].speedRef_Hz = motorVars[HAL_MTR_1].speedRef_Hz;
+                    motorVars[HAL_MTR_1].speedRef_Hz = ((sign*newSetpoint)/(60.0f / userParams[HAL_MTR_1].motor_numPolePairs)); // convert rpm to Hz
+                    motorVars[HAL_MTR_2].speedRef_Hz = ((sign*newSetpoint)/(60.0f / userParams[HAL_MTR_2].motor_numPolePairs)); // convert rpm to Hz
                 }else{
                     motorVars[motorNum].speedRef_Hz = ((sign*newSetpoint)/(60.0f / userParams[motorNum].motor_numPolePairs)); // convert rpm to Hz
+                }
+                sciTx_msg("RxD: new setPoint for speed\n\r\0");
+            }else{
+                sciTx_msg("ERROR: Value out of spec!\n\r\0");
+            }
+        }else if (sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+1)]==115) {
+            // received command "s" = "AsM+xxxxE"
+            // new setpoint for speed
+
+            motorNum = (sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+2)]-48);
+
+            data32bit.data_u32 = ((uint32_t)sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+4)] << 24) + ((uint32_t)sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+5)] << 16) + ((uint32_t)sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+6)] << 8) + sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+7)];
+            float32_t newSetpoint = data32bit.data_f;
+            if (abs(newSetpoint) < MOTOR_MAX_SPEED){
+                if(systemVars.flagEnableSynControl == true) {
+                    motorVars[HAL_MTR_1].speedRef_Hz = (newSetpoint/(60.0f / userParams[HAL_MTR_1].motor_numPolePairs)); // convert rpm to Hz
+                    motorVars[HAL_MTR_2].speedRef_Hz = (newSetpoint/(60.0f / userParams[HAL_MTR_2].motor_numPolePairs)); // convert rpm to Hz
+                }else{
+                    motorVars[motorNum].speedRef_Hz = (newSetpoint/(60.0f / userParams[motorNum].motor_numPolePairs)); // convert rpm to Hz
                 }
                 sciTx_msg("RxD: new setPoint for speed\n\r\0");
             }else{
@@ -1104,8 +1078,27 @@ void runOffsetsCalculation(const uint16_t motorNum)
             float32_t newSetpoint = (((sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+4)]-48)*1000) + ((sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+5)]-48)*100) + ((sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+6)]-48)*10) + (sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+7)]-48));
             if ((newSetpoint >= 0) && (newSetpoint < MOTOR_MAX_ACCEL)){
                 if(systemVars.flagEnableSynControl == true) {
-                    motorVars[HAL_MTR_1].accelerationMax_Hzps = (newSetpoint/(60.0f / userParams[motorNum].motor_numPolePairs)); // convert rpm/s to Hz/s
-                    motorVars[HAL_MTR_2].accelerationMax_Hzps = motorVars[HAL_MTR_1].accelerationMax_Hzps;
+                    motorVars[HAL_MTR_1].accelerationMax_Hzps = (newSetpoint/(60.0f / userParams[HAL_MTR_1].motor_numPolePairs)); // convert rpm/s to Hz/s
+                    motorVars[HAL_MTR_2].accelerationMax_Hzps = (newSetpoint/(60.0f / userParams[HAL_MTR_2].motor_numPolePairs)); // convert rpm/s to Hz/s
+                }else{
+                    motorVars[motorNum].accelerationMax_Hzps = (newSetpoint/(60.0f / userParams[motorNum].motor_numPolePairs)); // convert rpm/s to Hz/s
+                }
+                sciTx_msg("RxD: new setPoint for acceleration\n\r\0");
+            }else{
+                sciTx_msg("ERROR: Value out of spec!\n\r\0");
+            }
+        }else if (sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+1)]==97) {
+            // received command "a" = "AaM+xxxxE"
+            // new setpoint for acceleration
+
+            motorNum = (sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+2)]-48);
+
+            data32bit.data_u32 = ((uint32_t)sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+4)] << 24) + ((uint32_t)sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+5)] << 16) + ((uint32_t)sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+6)] << 8) + sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+7)];
+            float32_t newSetpoint = data32bit.data_f;
+            if ((newSetpoint >= 0) && (newSetpoint < MOTOR_MAX_ACCEL)){
+                if(systemVars.flagEnableSynControl == true) {
+                    motorVars[HAL_MTR_1].accelerationMax_Hzps = (newSetpoint/(60.0f / userParams[HAL_MTR_1].motor_numPolePairs)); // convert rpm/s to Hz/s
+                    motorVars[HAL_MTR_2].accelerationMax_Hzps = (newSetpoint/(60.0f / userParams[HAL_MTR_2].motor_numPolePairs)); // convert rpm/s to Hz/s
                 }else{
                     motorVars[motorNum].accelerationMax_Hzps = (newSetpoint/(60.0f / userParams[motorNum].motor_numPolePairs)); // convert rpm/s to Hz/s
                 }
@@ -1128,6 +1121,16 @@ void runOffsetsCalculation(const uint16_t motorNum)
 
             Idq_ref_A[motorNum].value[0] = newSetpoint;
             sciTx_msg("RxD: new setPoint for Id\n\r\0");
+        }else if (sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+1)]==100){
+            // received command "d" = "AdM+xxxxE"
+            // new setpoint for Id
+
+            motorNum = (sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+2)]-48);
+
+            data32bit.data_u32 = ((uint32_t)sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+4)] << 24) + ((uint32_t)sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+5)] << 16) + ((uint32_t)sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+6)] << 8) + sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+7)];
+            float32_t newSetpoint = data32bit.data_f;
+            Idq_ref_A[motorNum].value[0] = newSetpoint;
+            sciTx_msg("RxD: new setPoint for Id\n\r\0");
         }else if (sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+1)]==81){
             // received command "Q" = "AQM+xxxxE"
             // new setpoint for Id
@@ -1141,6 +1144,15 @@ void runOffsetsCalculation(const uint16_t motorNum)
             }
             float32_t newSetpoint = sign * ((((sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+4)]-48)* (float32_t)1000) + ((sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+5)]-48)* (float32_t)100) + ((sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+6)]-48)* (float32_t)10) + (sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+7)]-48))/(float32_t)9999) * userParams[motorNum].maxCurrent_A;
 
+            Idq_ref_A[motorNum].value[1] = newSetpoint;
+            sciTx_msg("RxD: new setPoint for Iq\n\r\0");
+        }else if (sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+1)]==113){
+            // received command "q" = "AqM+xxxxE"
+            // new setpoint for Id
+
+            motorNum = (sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+2)]-48);
+            data32bit.data_u32 = ((uint32_t)sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+4)] << 24) + ((uint32_t)sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+5)] << 16) + ((uint32_t)sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+6)] << 8) + sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+7)];
+            float32_t newSetpoint = data32bit.data_f;
             Idq_ref_A[motorNum].value[1] = newSetpoint;
             sciTx_msg("RxD: new setPoint for Iq\n\r\0");
         }else if (sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+1)]==70){
@@ -1200,44 +1212,56 @@ void runOffsetsCalculation(const uint16_t motorNum)
             }else{
                 sciTx_msg("ERROR: Value out of spec!\n\r\0");
             }
-/*
-        }else if (sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+1)]==115) {
-            // received command "s" = "AsMxxxxE"
-            data32bit.data_u8[0] = sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+5)];
-            data32bit.data_u8[1] = sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+4)];
-            data32bit.data_u8[2] = sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+3)];
-            data32bit.data_u8[3] = sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+2)];
+        }else if (sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+1)]==71){
+            // received command G = "AGM+xxxxE"
+            // send information about Gatedriver
 
-            float32_t newSetpoint = data32bit.data_f;
-            if ((newSetpoint >= 0) && (newSetpoint < MOTOR_MAX_SPEED)){
-                systemVars.M1_speedSet_Hz = (newSetpoint/(60.0f / userParams[0].motor_numPolePairs)); // convert rpm to Hz
-                sciTx_msg("RxD: new setPoint for speed\n\r\0");
-            }else{
-                sciTx_msg("ERROR: Value out of spec!\n\r\0");
-            }
-        }else if (sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+1)]==97) {
-            // received command "a" = "AaMxxxxE"
-            data32bit.data_u8[0] = sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+5)];
-            data32bit.data_u8[1] = sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+4)];
-            data32bit.data_u8[2] = sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+3)];
-            data32bit.data_u8[3] = sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+2)];
-
-            float32_t newSetpoint = data32bit.data_f;
-            if ((newSetpoint >= 0) && (newSetpoint < MOTOR_MAX_ACCEL)){
-                systemVars.M1_accelerationMaxSet_Hzps = (newSetpoint/(60.0f / userParams[0].motor_numPolePairs)); // convert rpm/s to Hz/s
-                sciTx_msg("RxD: new setPoint for acceleration\n\r\0");
-            }else{
-                sciTx_msg("ERROR: Value out of spec!\n\r\0");
-            }
-*/
+            motorNum = (sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+2)]-48);
+            checkDRV8320status(motorNum);
         }else if (sciRingbuffer[sciRingbufferPointerOverflow(cmdPosition+1)]==73){
-            // received command I = "AIMxxxxE"
+            // received command I = "AIM+xxxxE"
             // send some status-information
 
             sciTx_msg("Dual-Motor-Controller for BLDC\n\r\0");
             sciTx_msg(VERSION_STRING);
             sciTx_msg(" built on " __DATE__ " " __TIME__ "\n\r\0");
             sciTx_msg("Infos: https://github.com/xn--nding-jua/egocart\n\r\0");
+        }
+    }
+
+    void checkDRV8320status(uint16_t motorNum) {
+        // check DRV8320RS for errors
+        drvSPI8320Vars[motorNum].readCmd=true;
+        HAL_readDRVData(halMtrHandle[motorNum], &drvSPI8320Vars[motorNum]);
+
+        if (drvSPI8320Vars[motorNum].Stat_Reg_00.FAULT) {
+            // error in DRV8320 detected
+            if (motorNum == HAL_MTR_1) { sciTx_msg("BOOSTXL #1 ERROR! nFAULT: \0"); }
+            if (motorNum == HAL_MTR_2) { sciTx_msg("BOOSTXL #2 ERROR! nFAULT: \0"); }
+
+            if (drvSPI8320Vars[motorNum].Stat_Reg_00.VDS_OCP) { sciTx_msg("VDS_OCP \0"); }
+            if (drvSPI8320Vars[motorNum].Stat_Reg_00.GDF) { sciTx_msg("GDF \0"); }
+            if (drvSPI8320Vars[motorNum].Stat_Reg_00.UVLO) { sciTx_msg("UVLO \0"); }
+            if (drvSPI8320Vars[motorNum].Stat_Reg_00.OTSD) { sciTx_msg("OTSD \0"); }
+            if (drvSPI8320Vars[motorNum].Stat_Reg_00.VDS_HA) { sciTx_msg("VDS_HA \0"); }
+            if (drvSPI8320Vars[motorNum].Stat_Reg_00.VDS_LA) { sciTx_msg("VDS_LA \0"); }
+            if (drvSPI8320Vars[motorNum].Stat_Reg_00.VDS_HB) { sciTx_msg("VDS_HB \0"); }
+            if (drvSPI8320Vars[motorNum].Stat_Reg_00.VDS_LB) { sciTx_msg("VDS_LB \0"); }
+            if (drvSPI8320Vars[motorNum].Stat_Reg_00.VDS_HC) { sciTx_msg("VDS_HC \0"); }
+            if (drvSPI8320Vars[motorNum].Stat_Reg_00.VDS_LC) { sciTx_msg("VDS_LC \0"); }
+
+            sciTx_msg("\n\r\0");
+        }else{
+            if (motorNum == HAL_MTR_1) { sciTx_msg("BOOSTXL #1 OK\n\r\0"); }
+            if (motorNum == HAL_MTR_2) { sciTx_msg("BOOSTXL #2 OK\n\r\0"); }
+        }
+    }
+
+    uint16_t sciRingbufferPointerOverflow(uint16_t bufPointer) {
+        if (bufPointer>=SCI_RINGBUF_LEN) {
+            return (bufPointer-SCI_RINGBUF_LEN);
+        }else{
+            return bufPointer;
         }
     }
 

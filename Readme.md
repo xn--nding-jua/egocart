@@ -24,9 +24,12 @@ The C2000 microcontroller receives its set-points either via SCI/UART based on a
 * AQ0-xxxxCE / AQ1-xxxxCE = set reverse Iq-current (in current-(torque)-controlled-mode) (with xxxx between 0 and 9999, which represents 0...Imax)
 * AF0+0003CE / AF0+0000CE = Start/Stop system (for both motors same command)
 * AV0+0000CE / AV1+0000CE = Read data for motor 1/2
+* AG0+0000CE / AG1+0000CE = Get status of Gatedriver for motor1/2
 * AI0+0000CE = Get general information about the control
 
 "C" = ErrorCheckByte = sum of all bytes between "A" and "C" divided by number of bytes. For example: AV0+0000CE -> C = trunc(sum("V0+0000")/7)
+
+All commands are available as ASCII-coded-values (upper-case-commands) or 32-bit-float-coded-values (lower-case-commands). ASCII-commands are convenient for controlling via a terminal-program. float-based-commands have higher resolution for the setpoints, but require a bit more effort on the code.
 
 ## Instructions to use this project
 * Download and install TI CodeComposerStudio from https://www.ti.com/tool/download/CCSTUDIO (v12.4 has been used for compiling)

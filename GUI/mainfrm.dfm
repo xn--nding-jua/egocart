@@ -1,5 +1,5 @@
 object mainform: Tmainform
-  Left = 1787
+  Left = 2034
   Top = 169
   Width = 1161
   Height = 648
@@ -697,8 +697,53 @@ object mainform: Tmainform
       OnClick = Button14Click
     end
   end
+  object ComboBox1: TComboBox
+    Left = 96
+    Top = 16
+    Width = 73
+    Height = 21
+    Style = csDropDownList
+    ItemHeight = 13
+    ItemIndex = 0
+    TabOrder = 11
+    Text = 'COM1'
+    Items.Strings = (
+      'COM1'
+      'COM2'
+      'COM3'
+      'COM4'
+      'COM5'
+      'COM6'
+      'COM7'
+      'COM8'
+      'COM9'
+      'COM10'
+      'COM11'
+      'COM12'
+      'COM13'
+      'COM14'
+      'COM15'
+      'COM16')
+  end
+  object ComboBox2: TComboBox
+    Left = 176
+    Top = 16
+    Width = 73
+    Height = 21
+    Style = csDropDownList
+    ItemHeight = 13
+    ItemIndex = 2
+    TabOrder = 12
+    Text = '38400'
+    Items.Strings = (
+      '9600'
+      '19200'
+      '38400'
+      '57600'
+      '115200')
+  end
   object XPManifest1: TXPManifest
-    Left = 216
+    Left = 696
     Top = 16
   end
   object comport: TCommPortDriver
@@ -706,14 +751,14 @@ object mainform: Tmainform
     PortName = '\\.\COM9'
     BaudRate = brCustom
     BaudRateValue = 38400
-    Left = 248
+    Left = 728
     Top = 16
   end
   object Timer1: TTimer
     Enabled = False
     Interval = 500
     OnTimer = Timer1Timer
-    Left = 320
+    Left = 800
     Top = 16
   end
 end

@@ -75,13 +75,15 @@
 #ifdef COMM_SCI
     #define uint8_t char
     //#define SCI_ECHO_ON // set true to show input and false to disable it
-    #define SCI_CMD_LEN 12 // 10 characters + CRLF = AxM+vvvvCE\n\r
-    #define SCI_RINGBUF_LEN SCI_CMD_LEN*5 // place for 5 commands
+    #define SCI_PAYLOAD_LEN 7
+    #define SCI_CMD_LEN (SCI_PAYLOAD_LEN + 5) // payload + "A", "C", "E" and CR/LF
+    #define SCI_RINGBUF_LEN SCI_CMD_LEN*5 // give space for 5 commands in ringbuffer
 	
     char sciRingbuffer[SCI_RINGBUF_LEN];
     uint16_t sciRingbufferPointer = 0;
 	
     extern void checkDRV8320status();
+    extern uint16_t sciRingbufferPointerOverflow(uint16_t bufPointer);
     extern void sciSearchCmd();
     extern void sciProcessCmd(uint16_t cmdPosition);
     extern void sciTx_msg(char * msg);
@@ -169,26 +171,13 @@
 #define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
 
 //
-// typedefs for 16- and 32-bit data
+// typedef for 32-bit data
 //
 typedef union
 {
-   uint16_t data_u16;
-   int16_t data_i16;
-   uint8_t data_u8[2];
-   int8_t data_i8[2];
-}uData16bit;
-uData16bit data16bit;
-
-typedef union
-{
-   float data_f;
+   float32_t data_f;
    uint32_t data_u32;
-   int32_t data_i32;
    uint16_t data_u16[2];
-   int16_t data_i16[2];
-   uint8_t data_u8[4];
-   int8_t data_i8[4];
 }uData32bit;
 uData32bit data32bit;
 
